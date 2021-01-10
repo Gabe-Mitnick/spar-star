@@ -164,10 +164,11 @@ function step() {
 			drawScoreBoard();
 		}
 		c.msg.clearRect(0, 0, frameWidth, frameHeight);
+		c.msg.globalAlpha = lastPointTTL / 80;
 		c.msg.textAlign = "center";
-		c.msg.font = (200 - lastPointTTL) + "px " + FONT_FAMILY;
+		c.msg.font = ((81 - lastPointTTL) ** 4 / 100_000) + "px " + FONT_FAMILY;
 		c.msg.fillStyle = lastPointColor;
-		c.msg.fillText("yeah!", frameWidth / 2, frameHeight / 2)
+		c.msg.fillText("yeah!", frameWidth / 2, frameHeight / 2);
 		lastPointTTL--;
 		if (lastPointTTL == 0) {
 			resetScreen()
@@ -199,6 +200,9 @@ function resize() {
 		char.x = Math.min(char.x, frameWidth - CHAR_RADIUS)
 		char.y = Math.min(char.y, frameHeight - CHAR_RADIUS)
 	}
+	// set context settings because for some reason they get cleared
+	c.main.lineCap = "round";
+	c.score.globalAlpha = 0.5;
 	drawScoreBoard();
 }
 
@@ -214,7 +218,8 @@ function resetScreen() {
 
 function drawScoreBoard() {
 	c.score.clearRect(0, 0, frameWidth, frameHeight)
-	c.score.font = "120px " + FONT_FAMILY;
+	c.score.font = "140px " + FONT_FAMILY;
+
 	// separator
 	c.score.textAlign = "center";
 	c.score.fillStyle = NEUTRAL_COLOR;
@@ -235,12 +240,10 @@ window.onload = function() {
 		canvases[layerName] = document.getElementById(layerName + "-canvas");
 		c[layerName] = canvases[layerName].getContext("2d");
 	}
-	window.addEventListener("resize", resize, false);
-	// set context settings
-	c.main.lineCap = "round";
 	// reset frame size and character positions
 	resize();
 	resetScreen();
+	window.addEventListener("resize", resize, false);
 	// begin animation
 	window.requestAnimationFrame(step);
 }
