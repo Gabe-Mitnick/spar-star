@@ -71,7 +71,7 @@ class Character {
 			this.yv = Math.abs(this.yv) * -BOUNCE_COEF;
 		}
 
-		// wrap
+		// // wrap
 		// bouncing
 		// if (this.x <= CHAR_RADIUS) {
 		// 	this.x += frameWidth;
@@ -130,20 +130,20 @@ class Character {
 	givePoint () {
 		console.log('point to ' + this.color);
 		this.score++;
-		// if (lastPointTTL == 80) {
-			// lastPointColor = '#666666';
-		// } else {
+		if (lastPointTTL == 80) {
+			lastPointColor = '#666666';
+		} else {
 			lastPointColor = this.color;
 			lastPointTTL = 80;
-		// }
+		}
 		console.log(lastPointColor);
 	}
 }
 
 // characters
-let chars = [new Character(1/4, 1/4, "#f9bd30", 87, 83, 65, 68),
-	new Character(3/4, 1/4, "#fb4934", 38, 40, 37, 39),
-	new Character(1/4, 3/4, "#fb4934", 38, 40, 37, 39),
+let chars = [
+	new Character(1/4, 1/4, "#f9bd30", 87, 83, 65, 68),
+	new Character(3/4, 3/4, "#fb4934", 38, 40, 37, 39),
 ];
 
 function keySet(keyCode, state) {
@@ -221,17 +221,14 @@ function drawScoreBoard() {
 
 window.onload = function() {
 	canvas = document.getElementById("main-canvas");
-	// const canvas = document.getElementById("main-canvas");
-	
-	window.addEventListener('resize', resize, false);
+	window.addEventListener("resize", resize, false);
 	ctx = canvas.getContext("2d");
 	// set context settings
 	ctx.strokeStyle = "#fff";
 	ctx.lineWidth = 5;
 	ctx.lineCap = "round";
 	ctx.lineJoin = "round";
-	// ctx.globalCompositeOperation = "difference";
-	
+	// reset frame size and character positions
 	resize();
 	resetScreen()
 	// begin animation
