@@ -7,18 +7,33 @@ let canvases = {},
 	lastPointTTL = 0;
 
 // constants
-const BACKGROUND_COLOR = "#232323",
-	NEUTRAL_COLOR = "#666666"
-	FONT_FAMILY = "AmadorW01-Regular",
+// const BACKGROUND_COLOR = "#232323",
+const BACKGROUND_COLOR = "#000000",
+	NEUTRAL_COLOR = "#666666",
+	FONT_FAMILY = "jaf-herb, serif",
 	// character size
 	CHAR_RADIUS = 20,
 	SWORD_LENGTH = 150,
 	// physics
 	THRUST = 1,
-	FRICTION = .98,
-	BOUNCE_COEF = .9,
+	FRICTION = 0.98,
+	BOUNCE_COEF = 0.9,
 	// to normalize diagonal acceleration
 	DIAGONAL_MODIFIER = Math.sqrt(0.5);
+
+window.onload = function() {
+	// find all canvas elements and create contexts
+	for (const layerName of ["main", "score", "msg"]) {
+		canvases[layerName] = document.getElementById(layerName + "-canvas");
+		c[layerName] = canvases[layerName].getContext("2d");
+	}
+	// reset frame size and character positions
+	resize();
+	resetScreen();
+	window.addEventListener("resize", resize, false);
+	// begin animation
+	window.requestAnimationFrame(step);
+};
 
 class Character {
 	constructor(xPortion, yPortion, color,
@@ -90,7 +105,7 @@ class Character {
 		let velocityMagnitude = Math.sqrt(this.xv * this.xv + this.yv * this.yv);
 		this.swordX = this.x + this.xv / velocityMagnitude * SWORD_LENGTH;
 		this.swordY = this.y + this.yv / velocityMagnitude * SWORD_LENGTH;
-	};
+	}
 
 	draw () {
 		// draw character
@@ -130,6 +145,7 @@ class Character {
 	}
 
 	givePoint () {
+		this.draw();
 		this.score++;
 		if (lastPointTTL == 80) {
 			lastPointColor = NEUTRAL_COLOR;
@@ -155,7 +171,7 @@ function keySet(keyCode, state) {
 			}
 		}
 	}
-};
+}
 
 function step() {
 	// draw background
@@ -166,16 +182,16 @@ function step() {
 		c.msg.clearRect(0, 0, frameWidth, frameHeight);
 		c.msg.globalAlpha = lastPointTTL / 80;
 		c.msg.textAlign = "center";
-		c.msg.font = ((81 - lastPointTTL) ** 4 / 100_000) + "px " + FONT_FAMILY;
+		c.msg.font = ((81 - lastPointTTL) ** 4 / 100000) + "px " + FONT_FAMILY;
 		c.msg.fillStyle = lastPointColor;
 		c.msg.fillText("yeah!", frameWidth / 2, frameHeight / 2);
 		lastPointTTL--;
 		if (lastPointTTL == 0) {
-			resetScreen()
+			resetScreen();
 			c.msg.clearRect(0, 0, frameWidth, frameHeight);
 		}
 	} else {
-		c.main.fillStyle = BACKGROUND_COLOR + "88";
+		c.main.fillStyle = BACKGROUND_COLOR + "aa";
 		c.main.fillRect(0, 0, frameWidth, frameHeight);
 		for (const char of chars) {
 			char.update();
@@ -197,12 +213,13 @@ function resize() {
 	}
 	// make sure characters are in frame
 	for (const char of chars) {
-		char.x = Math.min(char.x, frameWidth - CHAR_RADIUS)
-		char.y = Math.min(char.y, frameHeight - CHAR_RADIUS)
+		char.x = Math.min(char.x, frameWidth - CHAR_RADIUS);
+		char.y = Math.min(char.y, frameHeight - CHAR_RADIUS);
 	}
 	// set context settings because for some reason they get cleared
 	c.main.lineCap = "round";
 	c.score.globalAlpha = 0.5;
+	// c.main.globalCompositeOperation = "difference";
 	drawScoreBoard();
 }
 
@@ -210,40 +227,27 @@ function resetScreen() {
 	c.main.fillStyle = BACKGROUND_COLOR;
 	c.main.fillRect(0, 0, frameWidth, frameHeight);
 	for (const char of chars) {
-		char.reset()
-		char.draw()
+		char.reset();
+		char.draw();
 	}
 	drawScoreBoard();
 }
 
 function drawScoreBoard() {
-	c.score.clearRect(0, 0, frameWidth, frameHeight)
+	c.score.clearRect(0, 0, frameWidth, frameHeight);
 	c.score.font = "140px " + FONT_FAMILY;
 
 	// separator
 	c.score.textAlign = "center";
 	c.score.fillStyle = NEUTRAL_COLOR;
-	c.score.fillText("-", frameWidth / 2, 120)
+	c.score.fillText("-", frameWidth / 2, 120);
 	// first character
 	c.score.textAlign = "right";
 	c.score.fillStyle = chars[0].color;
-	c.score.fillText(chars[0].score, frameWidth / 2 - 30, 120)
+	c.score.fillText(chars[0].score, frameWidth / 2 - 30, 120);
 	// second character
 	c.score.textAlign = "left";
 	c.score.fillStyle = chars[1].color;
-	c.score.fillText(chars[1].score, frameWidth / 2 + 30, 120)
+	c.score.fillText(chars[1].score, frameWidth / 2 + 30, 120);
 }
 
-window.onload = function() {
-	// find all canvas elements and create contexts
-	for (const layerName of ["main", "score", "msg"]) {
-		canvases[layerName] = document.getElementById(layerName + "-canvas");
-		c[layerName] = canvases[layerName].getContext("2d");
-	}
-	// reset frame size and character positions
-	resize();
-	resetScreen();
-	window.addEventListener("resize", resize, false);
-	// begin animation
-	window.requestAnimationFrame(step);
-}

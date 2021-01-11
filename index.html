@@ -8,6 +8,8 @@
 		body {
 			overflow: hidden;
 			background: #232323;
+			margin: 0;
+			font-family: jaf-herb;
 		}
 		canvas {
 			position: absolute;
@@ -16,9 +18,10 @@
 		}
 	</style>
 	<script src="logic.js"></script>
+	<link rel="stylesheet" href="https://use.typekit.net/kjp5sfv.css">
 </head>
 
-<body onkeydown="keySet(event.which, true)" onkeyup="keySet(event.which, false)" style="margin: 0;">
+<body onkeydown="keySet(event.which, true)" onkeyup="keySet(event.which, false)">
 	<canvas id="main-canvas"></canvas>
 	<canvas id="score-canvas"></canvas>
 	<canvas id="msg-canvas"></canvas>
