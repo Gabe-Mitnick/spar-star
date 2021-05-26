@@ -11,7 +11,7 @@ const BACKGROUND_COLOR = "#232323",
 	NEUTRAL_COLOR = "#666666",
 	FONT_FAMILY = "AmadorW01-Regular, serif",
 	// character size
-	CHAR_RADIUS = 20,
+	RADIUS = 20,
 	SWORD_LENGTH = 150,
 	// physics
 	THRUST = 1,
@@ -20,7 +20,7 @@ const BACKGROUND_COLOR = "#232323",
 	// to normalize diagonal acceleration
 	ROOT_2 = Math.sqrt(0.5),
 	// 0.002
-	POWER_UP_PROBABILITY = 0.001;
+	POWER_UP_PROBABILITY = 0.01;
 
 window.onload = function() {
 	// find all canvas elements and create contexts
@@ -61,9 +61,12 @@ class Character {
 	reset() {
 		this.swordLength = SWORD_LENGTH;
 		this.thrust = THRUST;
+		this.wrap = false;
 		this.x = this.xPortion * frameWidth;
 		this.y = this.yPortion * frameHeight;
 		this.yv = this.xv = 0;
+		this.swordX = this.x;
+		this.swordY = this.y;
 	}
 
 	update() {
@@ -77,34 +80,36 @@ class Character {
 		this.xv += (this.keyStates.right - this.keyStates.left) * adjustment * this.thrust;
 		this.yv += (this.keyStates.down - this.keyStates.up) * adjustment * this.thrust;
 
-		// // bouncing
-		if (this.x <= CHAR_RADIUS) {
-			this.xv = Math.abs(this.xv) * BOUNCE_COEF;
-		} else if (this.x >= frameWidth - CHAR_RADIUS) {
-			this.xv = Math.abs(this.xv) * -BOUNCE_COEF;
-		}
-		if (this.y <= CHAR_RADIUS) {
-			this.yv = Math.abs(this.yv) * BOUNCE_COEF;
-		} else if (this.y >= frameHeight - CHAR_RADIUS) {
-			this.yv = Math.abs(this.yv) * -BOUNCE_COEF;
+		if (this.wrap) {
+			// wrap around walls
+			if (this.x <= RADIUS) {
+				this.x += frameWidth;
+			} else if (this.x >= frameWidth - RADIUS) {
+				this.x -= frameWidth;
+			}
+			if (this.y <= RADIUS) {
+				this.y += frameHeight;
+			} else if (this.y >= frameHeight - RADIUS) {
+				this.y -= frameHeight;
+			}
+		} else {
+			// bounce off walls
+			if (this.x <= RADIUS) {
+				this.xv = Math.abs(this.xv) * BOUNCE_COEF;
+			} else if (this.x >= frameWidth - RADIUS) {
+				this.xv = Math.abs(this.xv) * -BOUNCE_COEF;
+			}
+			if (this.y <= RADIUS) {
+				this.yv = Math.abs(this.yv) * BOUNCE_COEF;
+			} else if (this.y >= frameHeight - RADIUS) {
+				this.yv = Math.abs(this.yv) * -BOUNCE_COEF;
+			}
 		}
 
-		// // wrap
-		// bouncing
-		// if (this.x <= CHAR_RADIUS) {
-		// 	this.x += frameWidth;
-		// } else if (this.x >= frameWidth - CHAR_RADIUS) {
-		// 	this.x -= frameWidth;
-		// }
-		// if (this.y <= CHAR_RADIUS) {
-		// 	this.y += frameHeight;
-		// } else if (this.y >= frameHeight - CHAR_RADIUS) {
-		// 	this.y -= frameHeight;
-		// }
-
+		// apply velocity
 		this.x += this.xv;
 		this.y += this.yv;
-
+		// calculate sword position
 		let velocityMagnitude = Math.sqrt(this.xv * this.xv + this.yv * this.yv);
 		this.swordX = this.x + this.xv / velocityMagnitude * this.swordLength;
 		this.swordY = this.y + this.yv / velocityMagnitude * this.swordLength;
@@ -121,31 +126,37 @@ class Character {
 		c.main.stroke();
 		c.main.closePath();
 		c.main.beginPath();
-		c.main.arc(this.x, this.y, CHAR_RADIUS, 0, 2 * Math.PI);
+		c.main.arc(this.x, this.y, RADIUS, 0, 2 * Math.PI);
 		c.main.fill();
 	}
 
-	detectHit() {
+	detectHits() {
 		// see if "this" has hit another char
-		for (const char of chars) {
-			if (this !== char) {
-				// projection of vector from this char to other char onto sword vector
-				let vertDist = ((this.swordX - this.x) * (char.x - this.x) +
-					(this.swordY - this.y) * (char.y - this.y)) / this.swordLength;
-				// projection of vector from this char to other char onto normal of sword vector
-				let horizDist = Math.abs((this.swordY - this.y) * (char.x - this.x) -
-					(this.swordX - this.x) * (char.y - this.y)) / this.swordLength;
-
-				if (
-					// CHECK SLICE
-					horizDist <= CHAR_RADIUS && 0 <= vertDist && vertDist <= this.swordLength ||
-					// CHECK STAB
-					(this.swordX - char.x) ** 2 + (this.swordY - char.y) ** 2 <= CHAR_RADIUS
-				) {
-					this.givePoint();
-				}
+		for (const otherChar of chars) {
+			if (this !== otherChar && this.isTouching(otherChar)) {
+				this.givePoint();
 			}
 		}
+		// traditional indexed for loop to accommodate removing items
+		for (let i = powerUps.length - 1; i >= 0; i--) {
+			if (this.isTouching(powerUps[i])) {
+				powerUps[i].applyEffect(this);
+				powerUps.splice(i, 1);
+			}	
+		}
+	}
+	// other can be a char or a powerup; just needs an x and y
+	isTouching(other) {
+		// projection of vector from this to other onto sword vector
+		let vertDist = ((this.swordX - this.x) * (other.x - this.x) +
+				(this.swordY - this.y) * (other.y - this.y)) / this.swordLength;
+		// projection of vector from this to other onto normal of sword vector
+		let horizDist = Math.abs((this.swordY - this.y) * (other.x - this.x) -
+				(this.swordX - this.x) * (other.y - this.y)) / this.swordLength;
+
+		let slice = horizDist <= RADIUS && 0 <= vertDist && vertDist <= this.swordLength;
+		let stab = (this.swordX - other.x) ** 2 + (this.swordY - other.y) ** 2 <= RADIUS;
+		return slice || stab;
 	}
 
 	givePoint() {
@@ -187,16 +198,8 @@ class PowerUp {
 		// console.log('drew powerup at ' + this.x + ', ' + this.y);
 		c.main.fillStyle = this.color;
 		c.main.beginPath();
-		c.main.arc(this.x, this.y, CHAR_RADIUS, 0, 2 * Math.PI);
+		c.main.arc(this.x, this.y, RADIUS, 0, 2 * Math.PI);
 		c.main.fill();
-	}
-
-	checkCollision(char) {
-		if ((char.x - this.x) ** 2 + (char.y - this.y) ** 2 < CHAR_RADIUS ** 2 * 4) {
-			this.applyEffect(char);
-			// remove self from powerUps list
-			powerUps.splice(powerUps.indexOf(this), 1);
-		}
 	}
 
 	applyEffect(char) {
@@ -207,63 +210,42 @@ class PowerUp {
 class MoreSword extends PowerUp {
 	color = "#b16286";
 	applyEffect(char) {
-		char.swordLength *= 1.2;
-	}
-}
-class LessSword extends PowerUp {
-	color = "#458588";
-	applyEffect(char) {
-		char.swordLength /= 1.2;
+		if (char.swordLength >= SWORD_LENGTH * 2) {
+			char.swordLength = SWORD_LENGTH * 0.6;
+		} else {
+			char.swordLength += SWORD_LENGTH * 0.2;
+		}
 	}
 }
 class MoreThrust extends PowerUp {
 	color = "#b8bb26";
 	applyEffect(char) {
-		char.thrust *= 1.2;
+		if (char.thrust >= THRUST * 2) {
+			char.thrust = THRUST * 0.6;
+		} else {
+			char.thrust += THRUST * 0.2;
+		}
 	}
 }
-class LessThrust extends PowerUp {
-	color = "#fe8019";
+class Wrap extends PowerUp {
+	color = "#aaaaaa";
 	applyEffect(char) {
-		char.thrust /= 1.2;
+		char.wrap = !char.wrap;
 	}
 }
-// class MirrorTeammate extends PowerUp {
-// 	color = "#999999";
-// 	applyEffect(char) {
-// 		console.log(char);
-// 		let teammate = new Character(1/2, 1/2, char.color, 
-// 			char.downKeyCode, char.upKeyCode, char.rightKeyCode, char.leftKeyCode);
-// 		teammate.swordLength = char.sword;
-// 		teammate.thrust = char.thrust;
-// 		teammate.x = frameWidth - char.x;
-// 		teammate.y = frameHeight - char.y;
-// 		teammate.xv = -teammate.xv;
-// 		teammate.yv = -teammate.yv;
-// 		console.log(teammate.keyCodes);
-// 		chars.push(teammate);
-// 		console.log(teammate.keyCodes);
-// 		// chars.push(new Character(1/4, 1/4, "#f9bd30", 87, 83, 65, 68));
-// 		console.log(chars);
-// 		// chars[2].draw();
-// 	}
-// }
 
 function randomPowerUp() {
-	let rand = Math.floor(Math.random() * 4);
+	let rand = Math.floor(Math.random() * 3);
 	switch (rand) {
 		case 0:
 			return new MoreSword();
 		case 1:
-			return new LessSword();
-		case 2:
 			return new MoreThrust();
-		case 3:
-			return new LessThrust();
-		case 4:
-			// return new MirrorTeammate();
+		case 2:
+			return new Wrap();
 		default:
-			break;
+			console.log("modify number of power ups in randomPowerUp()!");
+			return new MoreSword();
 	}
 }
 
@@ -287,20 +269,17 @@ function step() {
 			c.msg.clearRect(0, 0, frameWidth, frameHeight);
 		}
 	} else {
-		c.main.fillStyle = BACKGROUND_COLOR + "aa";
+		c.main.fillStyle = BACKGROUND_COLOR + "bb";
 		c.main.fillRect(0, 0, frameWidth, frameHeight);
+		for (const pow of powerUps) {
+			pow.draw();
+		}
 		for (const char of chars) {
 			char.update();
 			char.draw();
 		}
 		for (const char of chars) {
-			char.detectHit();
-		}
-		for (const pow of powerUps) {
-			pow.draw();
-			for (const char of chars) {
-				pow.checkCollision(char);
-			}
+			char.detectHits();
 		}
 	}
 	// random chance of adding new powerup
@@ -321,8 +300,8 @@ function resize() {
 	}
 	// make sure characters are in frame
 	for (const char of chars) {
-		char.x = Math.min(char.x, frameWidth - CHAR_RADIUS);
-		char.y = Math.min(char.y, frameHeight - CHAR_RADIUS);
+		char.x = Math.min(char.x, frameWidth - RADIUS);
+		char.y = Math.min(char.y, frameHeight - RADIUS);
 	}
 	// set context settings because for some reason they get cleared
 	c.main.lineCap = "round";
@@ -338,6 +317,7 @@ function resetScreen() {
 		char.reset();
 		char.draw();
 	}
+	powerUps = [];
 	drawScoreBoard();
 }
 
