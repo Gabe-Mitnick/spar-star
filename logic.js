@@ -12,7 +12,9 @@ const BACKGROUND_COLOR = "#232323",
 	FONT_FAMILY = "AmadorW01-Regular, serif",
 	// character size
 	RADIUS = 20,
-	SWORD_LENGTH = 150,
+	SWORD_LENGTH = 160,
+	SWORD_WIDTH = 10,
+	COLLISION_RADIUS = RADIUS + SWORD_WIDTH / 2;
 	// physics
 	THRUST = 1,
 	FRICTION = 0.98,
@@ -20,9 +22,9 @@ const BACKGROUND_COLOR = "#232323",
 	// to normalize diagonal acceleration
 	ROOT_2 = Math.sqrt(0.5),
 	// 0.002
-	POWER_UP_PROBABILITY = 0.01;
+	POWER_UP_PROBABILITY = 0.002;
 
-window.onload = function() {
+window.onload = function () {
 	// find all canvas elements and create contexts
 	for (const layerName of ["main", "score", "msg"]) {
 		canvases[layerName] = document.getElementById(layerName + "-canvas");
@@ -37,8 +39,7 @@ window.onload = function() {
 };
 
 class Character {
-	constructor(xPortion, yPortion, color,
-			upKeyCode, downKeyCode, leftKeyCode, rightKeyCode) {
+	constructor(xPortion, yPortion, color, upKeyCode, downKeyCode, leftKeyCode, rightKeyCode) {
 		this.xPortion = xPortion;
 		this.yPortion = yPortion;
 		this.color = color;
@@ -48,16 +49,16 @@ class Character {
 			up: upKeyCode,
 			down: downKeyCode,
 			left: leftKeyCode,
-			right: rightKeyCode
+			right: rightKeyCode,
 		};
 		this.keyStates = {
 			up: false,
 			down: false,
 			left: false,
-			right: false
+			right: false,
 		};
 	}
-	
+
 	reset() {
 		this.swordLength = SWORD_LENGTH;
 		this.thrust = THRUST;
@@ -74,8 +75,8 @@ class Character {
 		this.yv *= FRICTION;
 
 		// fix diagonal acceleration
-		let adjustment = (this.keyStates.right + this.keyStates.left == 1) &&
-			(this.keyStates.up + this.keyStates.down == 1) ? ROOT_2 : 1;
+		let adjustment =
+			this.keyStates.right != this.keyStates.left && this.keyStates.up != this.keyStates.down ? ROOT_2 : 1;
 
 		this.xv += (this.keyStates.right - this.keyStates.left) * adjustment * this.thrust;
 		this.yv += (this.keyStates.down - this.keyStates.up) * adjustment * this.thrust;
@@ -111,15 +112,15 @@ class Character {
 		this.y += this.yv;
 		// calculate sword position
 		let velocityMagnitude = Math.sqrt(this.xv * this.xv + this.yv * this.yv);
-		this.swordX = this.x + this.xv / velocityMagnitude * this.swordLength;
-		this.swordY = this.y + this.yv / velocityMagnitude * this.swordLength;
+		this.swordX = this.x + (this.xv / velocityMagnitude) * this.swordLength;
+		this.swordY = this.y + (this.yv / velocityMagnitude) * this.swordLength;
 	}
 
 	draw() {
 		// draw character
 		c.main.fillStyle = this.color;
 		c.main.strokeStyle = this.color;
-		c.main.lineWidth = 8;
+		c.main.lineWidth = SWORD_WIDTH;
 		c.main.beginPath();
 		c.main.moveTo(this.x, this.y);
 		c.main.lineTo(this.swordX, this.swordY);
@@ -142,20 +143,22 @@ class Character {
 			if (this.isTouching(powerUps[i])) {
 				powerUps[i].applyEffect(this);
 				powerUps.splice(i, 1);
-			}	
+			}
 		}
 	}
 	// other can be a char or a powerup; just needs an x and y
 	isTouching(other) {
 		// projection of vector from this to other onto sword vector
-		let vertDist = ((this.swordX - this.x) * (other.x - this.x) +
-				(this.swordY - this.y) * (other.y - this.y)) / this.swordLength;
+		let vertDist =
+			((this.swordX - this.x) * (other.x - this.x) + (this.swordY - this.y) * (other.y - this.y)) /
+			this.swordLength;
 		// projection of vector from this to other onto normal of sword vector
-		let horizDist = Math.abs((this.swordY - this.y) * (other.x - this.x) -
-				(this.swordX - this.x) * (other.y - this.y)) / this.swordLength;
+		let horizDist =
+			Math.abs((this.swordY - this.y) * (other.x - this.x) - (this.swordX - this.x) * (other.y - this.y)) /
+			this.swordLength;
 
-		let slice = horizDist <= RADIUS && 0 <= vertDist && vertDist <= this.swordLength;
-		let stab = (this.swordX - other.x) ** 2 + (this.swordY - other.y) ** 2 <= RADIUS;
+		let slice = horizDist <= COLLISION_RADIUS && 0 <= vertDist && vertDist <= this.swordLength;
+		let stab = (this.swordX - other.x) ** 2 + (this.swordY - other.y) ** 2 <= COLLISION_RADIUS;
 		return slice || stab;
 	}
 
@@ -173,8 +176,8 @@ class Character {
 
 // characters
 let chars = [
-	new Character(1/4, 1/4, "#f9bd30", 87, 83, 65, 68),
-	new Character(3/4, 3/4, "#fb4934", 38, 40, 37, 39),
+	new Character(1 / 4, 1 / 4, "#f9bd30", 87, 83, 65, 68),
+	new Character(3 / 4, 3 / 4, "#fb4934", 38, 40, 37, 39),
 ];
 
 function keySet(keyCode, state) {
@@ -191,15 +194,29 @@ class PowerUp {
 	constructor() {
 		this.x = Math.random() * frameWidth;
 		this.y = Math.random() * frameHeight;
+		this.color = undefined;
 	}
 
 	draw() {
 		// draw powerup
-		// console.log('drew powerup at ' + this.x + ', ' + this.y);
+		c.main.translate(this.x, this.y);
+		// circle
 		c.main.fillStyle = this.color;
 		c.main.beginPath();
-		c.main.arc(this.x, this.y, RADIUS, 0, 2 * Math.PI);
+		c.main.arc(0, 0, RADIUS, 0, 2 * Math.PI);
+		c.main.strokeStyle = BACKGROUND_COLOR;
+		c.main.lineWidth = 6;
+		c.main.stroke();
 		c.main.fill();
+		// draw symbol for powerup
+		c.main.fillStyle = "#eee";
+		c.main.strokeStyle = "#eee";
+		this.drawSymbol();
+		c.main.translate(-this.x, -this.y);
+	}
+
+	drawSymbol() {
+		c.main.fillRect(-10, -10, 20, 20);
 	}
 
 	applyEffect(char) {
@@ -208,17 +225,39 @@ class PowerUp {
 }
 
 class MoreSword extends PowerUp {
-	color = "#b16286";
+	color = "#076678";
 	applyEffect(char) {
 		if (char.swordLength >= SWORD_LENGTH * 2) {
-			char.swordLength = SWORD_LENGTH * 0.6;
+			char.swordLength = SWORD_LENGTH * 0.7;
 		} else {
-			char.swordLength += SWORD_LENGTH * 0.2;
+			char.swordLength += SWORD_LENGTH * 0.3;
 		}
 	}
+	// arrow icon <-> but diagonal /
+	drawSymbol() {
+		// line
+		c.main.beginPath();
+		c.main.moveTo(6, -6);
+		c.main.lineTo(-6, 6);
+		c.main.lineWidth = 5;
+		c.main.stroke();
+		// top right triangle
+		c.main.beginPath();
+		c.main.moveTo(0, -10);
+		c.main.lineTo(12, -12);
+		c.main.lineTo(10, 0);
+		c.main.fill();
+		// bottom left triangle
+		c.main.beginPath();
+		c.main.moveTo(0, 10);
+		c.main.lineTo(-12, 12);
+		c.main.lineTo(-10, 0);
+		c.main.fill();
+	}
 }
+
 class MoreThrust extends PowerUp {
-	color = "#b8bb26";
+	color = "#d65d0d";
 	applyEffect(char) {
 		if (char.thrust >= THRUST * 2) {
 			char.thrust = THRUST * 0.6;
@@ -226,12 +265,29 @@ class MoreThrust extends PowerUp {
 			char.thrust += THRUST * 0.2;
 		}
 	}
+
+	// lightning bolt icon
+	drawSymbol() {
+		// bottom left triangle
+		c.main.beginPath();
+		c.main.moveTo(3, -16);
+		c.main.lineTo(1, -4);
+		c.main.lineTo(9, -4);
+		c.main.lineTo(-3, 16);
+		c.main.lineTo(-1, 4);
+		c.main.lineTo(-9, 4);
+		c.main.fill();
+	}
 }
+
 class Wrap extends PowerUp {
-	color = "#aaaaaa";
+	color = "#8f3f71";
 	applyEffect(char) {
 		char.wrap = !char.wrap;
 	}
+	// icon showing wrap effect
+	// drawSymbol() {
+	// }
 }
 
 function randomPowerUp() {
@@ -260,7 +316,7 @@ function step() {
 		c.msg.clearRect(0, 0, frameWidth, frameHeight);
 		c.msg.globalAlpha = Math.min(1, lastPointTTL / 60);
 		c.msg.textAlign = "center";
-		c.msg.font = ((81 - lastPointTTL) ** 4 / 40000) + "px " + FONT_FAMILY;
+		c.msg.font = (81 - lastPointTTL) ** 4 / 40000 + "px " + FONT_FAMILY;
 		c.msg.fillStyle = lastPointColor;
 		c.msg.fillText("yeah!", frameWidth / 2, frameHeight / 2);
 		lastPointTTL--;
