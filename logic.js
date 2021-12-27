@@ -3,7 +3,7 @@ let canvases = {},
 	c = {},
 	frameWidth,
 	frameHeight,
-	lastPointColor,
+	lastPointWinner = null,
 	lastPointTTL = 0;
 
 // constants
@@ -41,9 +41,10 @@ window.onload = function () {
 };
 
 class Character {
-	constructor(xPortion, yPortion, color, upKeyCode, downKeyCode, leftKeyCode, rightKeyCode) {
+	constructor(xPortion, yPortion, name, color, upKeyCode, downKeyCode, leftKeyCode, rightKeyCode) {
 		this.xPortion = xPortion;
 		this.yPortion = yPortion;
+		this.name = name;
 		this.color = color;
 		this.score = 0;
 		// keypress management
@@ -136,13 +137,14 @@ class Character {
 	}
 
 	detectHits() {
-		// see if "this" has hit another char
+		// detect hits of other chars
 		for (const otherChar of chars) {
 			if (this !== otherChar && this.isTouching(otherChar)) {
 				this.givePoint();
 			}
 		}
-		// traditional indexed for loop to accommodate removing items
+		// detect hits of power ups
+		// backward indexed loop to allow removal of power ups
 		for (let i = powerUps.length - 1; i >= 0; i--) {
 			if (this.isTouching(powerUps[i])) {
 				powerUps[i].applyEffect(this);
@@ -169,19 +171,21 @@ class Character {
 	givePoint() {
 		this.draw();
 		this.score++;
-		if (lastPointTTL == 80) {
-			lastPointColor = NEUTRAL_COLOR;
-		} else {
-			lastPointColor = this.color;
+		// if this is the first winner this frame
+		if (lastPointTTL < 80) {
+			lastPointWinner = this;
 			lastPointTTL = 80;
+		} else if (lastPointWinner != null) {
+			lastPointWinner.score--;
+			lastPointWinner = null;
 		}
 	}
 }
 
 // characters
 let chars = [
-	new Character(1 / 4, 1 / 4, "#f9bd30", 87, 83, 65, 68),
-	new Character(3 / 4, 3 / 4, "#fb4934", 38, 40, 37, 39),
+	new Character(1 / 4, 1 / 4, "yellow", "#f9bd30", 87, 83, 65, 68),
+	new Character(3 / 4, 3 / 4, "red", "#fb4934", 38, 40, 37, 39),
 ];
 
 function keySet(keyCode, state) {
@@ -326,20 +330,7 @@ let powerUps = [];
 function step() {
 	// draw background
 	if (lastPointTTL) {
-		if (lastPointTTL == 40) {
-			drawScoreBoard();
-		}
-		c.msg.clearRect(0, 0, frameWidth, frameHeight);
-		c.msg.globalAlpha = Math.min(1, lastPointTTL / 60);
-		c.msg.textAlign = "center";
-		c.msg.font = (81 - lastPointTTL) ** 4 / 40000 + "px " + FONT_FAMILY;
-		c.msg.fillStyle = lastPointColor;
-		c.msg.fillText("yeah!", frameWidth / 2, frameHeight / 2);
-		lastPointTTL--;
-		if (lastPointTTL == 0) {
-			resetScreen();
-			c.msg.clearRect(0, 0, frameWidth, frameHeight);
-		}
+		drawPointTransition();
 	} else {
 		c.main.fillStyle = BACKGROUND_COLOR + "bc";
 		c.main.fillRect(0, 0, frameWidth, frameHeight);
@@ -411,4 +402,21 @@ function drawScoreBoard() {
 	c.score.textAlign = "left";
 	c.score.fillStyle = chars[1].color;
 	c.score.fillText(chars[1].score, frameWidth / 2 + 30, 120);
+}
+
+function drawPointTransition() {
+	if (lastPointTTL == 40) {
+		drawScoreBoard();
+	}
+	c.msg.clearRect(0, 0, frameWidth, frameHeight);
+	c.msg.globalAlpha = Math.min(1, lastPointTTL / 60);
+	c.msg.textAlign = "center";
+	c.msg.font = (81 - lastPointTTL) ** 4 / 40000 + "px " + FONT_FAMILY;
+	c.msg.fillStyle = lastPointWinner.color;
+	c.msg.fillText("yeah!", frameWidth / 2, frameHeight / 2);
+	lastPointTTL--;
+	if (lastPointTTL == 0) {
+		resetScreen();
+		c.msg.clearRect(0, 0, frameWidth, frameHeight);
+	}
 }
