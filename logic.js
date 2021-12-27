@@ -14,7 +14,7 @@ const BACKGROUND_COLOR = "#232323",
 	RADIUS = 20,
 	SWORD_LENGTH = 160,
 	SWORD_WIDTH = 10,
-	COLLISION_RADIUS = RADIUS + SWORD_WIDTH / 2;
+	COLLISION_RADIUS = RADIUS + SWORD_WIDTH / 2,
 	// physics
 	THRUST = 1,
 	FRICTION = 0.98,
@@ -125,7 +125,6 @@ class Character {
 		c.main.moveTo(this.x, this.y);
 		c.main.lineTo(this.swordX, this.swordY);
 		c.main.stroke();
-		c.main.closePath();
 		c.main.beginPath();
 		c.main.arc(this.x, this.y, RADIUS, 0, 2 * Math.PI);
 		c.main.fill();
@@ -198,6 +197,7 @@ class PowerUp {
 	}
 
 	draw() {
+		c.main.globalAlpha = 0.5;
 		// draw powerup
 		c.main.translate(this.x, this.y);
 		// circle
@@ -209,14 +209,15 @@ class PowerUp {
 		c.main.stroke();
 		c.main.fill();
 		// draw symbol for powerup
-		c.main.fillStyle = "#eee";
-		c.main.strokeStyle = "#eee";
+		c.main.strokeStyle = "#fff";
+		c.main.lineWidth = 4;
 		this.drawSymbol();
 		c.main.translate(-this.x, -this.y);
+		c.main.globalAlpha = 1;
 	}
 
 	drawSymbol() {
-		c.main.fillRect(-10, -10, 20, 20);
+		c.main.strokeRect(-8, -8, 16, 16);
 	}
 
 	applyEffect(char) {
@@ -225,7 +226,7 @@ class PowerUp {
 }
 
 class MoreSword extends PowerUp {
-	color = "#076678";
+	color = "#458588";
 	applyEffect(char) {
 		if (char.swordLength >= SWORD_LENGTH * 2) {
 			char.swordLength = SWORD_LENGTH * 0.7;
@@ -233,31 +234,30 @@ class MoreSword extends PowerUp {
 			char.swordLength += SWORD_LENGTH * 0.3;
 		}
 	}
-	// arrow icon <-> but diagonal /
+	// draw arrow icon <->
 	drawSymbol() {
-		// line
+		// line -
 		c.main.beginPath();
-		c.main.moveTo(6, -6);
-		c.main.lineTo(-6, 6);
-		c.main.lineWidth = 5;
+		c.main.moveTo(-12, 0);
+		c.main.lineTo(12, 0);
 		c.main.stroke();
-		// top right triangle
+		// first chevron <
 		c.main.beginPath();
-		c.main.moveTo(0, -10);
-		c.main.lineTo(12, -12);
-		c.main.lineTo(10, 0);
-		c.main.fill();
-		// bottom left triangle
+		c.main.moveTo(-7, -6);
+		c.main.lineTo(-12, 0);
+		c.main.lineTo(-7, 6);
+		c.main.stroke();
+		// second chevron >
 		c.main.beginPath();
-		c.main.moveTo(0, 10);
-		c.main.lineTo(-12, 12);
-		c.main.lineTo(-10, 0);
-		c.main.fill();
+		c.main.moveTo(7, -6);
+		c.main.lineTo(12, 0);
+		c.main.lineTo(7, 6);
+		c.main.stroke();
 	}
 }
 
 class MoreThrust extends PowerUp {
-	color = "#d65d0d";
+	color = "#d65d0e";
 	applyEffect(char) {
 		if (char.thrust >= THRUST * 2) {
 			char.thrust = THRUST * 0.6;
@@ -266,28 +266,44 @@ class MoreThrust extends PowerUp {
 		}
 	}
 
-	// lightning bolt icon
+	// draw different double chevron icon >>
 	drawSymbol() {
-		// bottom left triangle
+		// first chevron >
 		c.main.beginPath();
-		c.main.moveTo(3, -16);
-		c.main.lineTo(1, -4);
-		c.main.lineTo(9, -4);
-		c.main.lineTo(-3, 16);
-		c.main.lineTo(-1, 4);
-		c.main.lineTo(-9, 4);
-		c.main.fill();
+		c.main.moveTo(-9, -9);
+		c.main.lineTo(0, 0);
+		c.main.stroke();
+		c.main.beginPath();
+		c.main.moveTo(0,0);
+		c.main.lineTo(-9, 9);
+		c.main.stroke();
+		// second chevron >
+		c.main.beginPath();
+		c.main.moveTo(3, -9);
+		c.main.lineTo(12, 0);
+		c.main.stroke();
+		c.main.beginPath();
+		c.main.moveTo(12,0);
+		c.main.lineTo(3, 9);
+		c.main.stroke();
 	}
 }
 
 class Wrap extends PowerUp {
-	color = "#8f3f71";
+	color = "#b16286";
 	applyEffect(char) {
 		char.wrap = !char.wrap;
 	}
-	// icon showing wrap effect
-	// drawSymbol() {
-	// }
+	// draw swirly portal icon
+	drawSymbol() {
+		// first arc
+		for (let i = 0; i < 3; i++) {
+			c.main.beginPath();
+			c.main.arc(0, -4, 8, 1.2, 1.5 * Math.PI);
+			c.main.stroke();
+			c.main.rotate((Math.PI * 2) / 3);
+		}
+	}
 }
 
 function randomPowerUp() {
@@ -361,6 +377,7 @@ function resize() {
 	}
 	// set context settings because for some reason they get cleared
 	c.main.lineCap = "round";
+	c.main.lineJoin = "round";
 	c.score.globalAlpha = 0.5;
 	// c.main.globalCompositeOperation = "difference";
 	drawScoreBoard();

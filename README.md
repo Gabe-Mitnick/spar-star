@@ -1,11 +1,12 @@
 # spar-star
 A simple little local two-player browser game. To try it out, download all the files and open index.html in your browser.
+Colors taken from [gruvbox](https://github.com/morhetz/gruvbox).
 
-# to do
+# TODO
 - add greeting page and simple tutorial
 - detect framerate and adapt thrust and friction
-- make score animation involving star
-- make wrap powerUp true wrap
+- improv score animation
+- fix portal powerup's behavior when player is crossing an edge
 - make swords visible before movement begins (pointing toward center of field)
 - add more powerups/status effects
    - inc/dec body size
