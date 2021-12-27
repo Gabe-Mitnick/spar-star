@@ -4,33 +4,48 @@
 		<meta charset="utf-8" />
 		<title>Spar Star</title>
 
-		<link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<!-- only need the characters 0123456789-yeah! -->
-		<link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans&display=swap&text=0123456789-yeah!" rel="stylesheet"> 
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans&display=swap" rel="stylesheet" />
 
 		<style>
 			body {
 				overflow: hidden;
 				background: #232323;
 				margin: 0;
-				font-family: Balsamiq Sans;
+				font-family: "Balsamiq Sans";
 			}
 			canvas {
 				position: absolute;
 				width: 100%;
 				height: 100%;
 			}
+			#message {
+				color: green;
+				position: absolute;
+				margin-top: 50vh;
+				margin-left: 50vw;
+				transform: translate(-50%, -50%);
+				white-space: nowrap;
+
+				opacity: 1;
+				font-size: 0px;
+			}
+			#message.shown {
+				opacity: 0;
+				font-size: 600px;
+				transition: font-size 2s ease-in, opacity 2s ease-out;
+			}
 		</style>
 		<link rel="stylesheet" href="https://use.typekit.net/kjp5sfv.css" />
 	</head>
-	
+
 	<body onkeydown="keySet(event.which, true)" onkeyup="keySet(event.which, false)">
 		<canvas id="main-canvas"></canvas>
 		<canvas id="score-canvas"></canvas>
 		<canvas id="msg-canvas"></canvas>
 		<!-- force chrome to load the font before running javascript -->
-		<span>!</span>
+		<div id="message">yeah!</div>
 		<script src="logic.js"></script>
 		<!-- GoatCounter analytics -->
 		<script data-goatcounter="https://gabe-mitnick.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>

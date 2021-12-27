@@ -1,10 +1,13 @@
 // initialize canvas vars
-let canvases = {},
-	c = {},
+let mainCanvas,
+	scoreCanvas,
+	ctx,
+	scoreCtx,
+	msg,
 	frameWidth,
 	frameHeight,
-	lastPointWinner = null,
-	lastPointTTL = 0;
+	pointWinner = null,
+	pointScored = false;
 
 // constants
 const BACKGROUND_COLOR = "#232323",
@@ -26,15 +29,17 @@ const BACKGROUND_COLOR = "#232323",
 
 window.onload = function () {
 	// find all canvas elements and create contexts
-	for (const layerName of ["main", "score", "msg"]) {
-		canvases[layerName] = document.getElementById(layerName + "-canvas");
-	}
-	c["main"] = canvases["main"].getContext("2d", { alpha: false });
-	c["score"] = canvases["score"].getContext("2d");
-	c["msg"] = canvases["msg"].getContext("2d");
+	mainCanvas = document.getElementById("main-canvas");
+	ctx = mainCanvas.getContext("2d", { alpha: false });
+
+	scoreCanvas = document.getElementById("score-canvas");
+	scoreCtx = scoreCanvas.getContext("2d");
+
+	msg = document.getElementById("message");
 	// reset frame size and character positions
 	resize();
 	resetScreen();
+	drawScoreBoard();
 	window.addEventListener("resize", resize, false);
 	// begin animation
 	window.requestAnimationFrame(step);
@@ -124,16 +129,16 @@ class Character {
 
 	draw() {
 		// draw character
-		c.main.fillStyle = this.color;
-		c.main.strokeStyle = this.color;
-		c.main.lineWidth = SWORD_WIDTH;
-		c.main.beginPath();
-		c.main.moveTo(this.x, this.y);
-		c.main.lineTo(this.swordX, this.swordY);
-		c.main.stroke();
-		c.main.beginPath();
-		c.main.arc(this.x, this.y, RADIUS, 0, 2 * Math.PI);
-		c.main.fill();
+		ctx.fillStyle = this.color;
+		ctx.strokeStyle = this.color;
+		ctx.lineWidth = SWORD_WIDTH;
+		ctx.beginPath();
+		ctx.moveTo(this.x, this.y);
+		ctx.lineTo(this.swordX, this.swordY);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(this.x, this.y, RADIUS, 0, 2 * Math.PI);
+		ctx.fill();
 	}
 
 	detectHits() {
@@ -170,14 +175,14 @@ class Character {
 
 	givePoint() {
 		this.draw();
-		this.score++;
 		// if this is the first winner this frame
-		if (lastPointTTL < 80) {
-			lastPointWinner = this;
-			lastPointTTL = 80;
-		} else if (lastPointWinner != null) {
-			lastPointWinner.score--;
-			lastPointWinner = null;
+		if (pointScored === false) {
+			this.score++;
+			pointWinner = this;
+			pointScored = true;
+		} else if (pointWinner != null) {
+			pointWinner.score--;
+			pointWinner = null;
 		}
 	}
 }
@@ -191,7 +196,7 @@ let chars = [
 function keySet(keyCode, state) {
 	for (const char of chars) {
 		for (const key in char.keyCodes) {
-			if (keyCode == char.keyCodes[key]) {
+			if (keyCode === char.keyCodes[key]) {
 				char.keyStates[key] = state;
 			}
 		}
@@ -208,29 +213,29 @@ class PowerUp {
 
 	// draw powerup
 	draw() {
-		c.main.translate(this.x, this.y);
-		c.main.globalAlpha = 0.65;
+		ctx.translate(this.x, this.y);
+		ctx.globalAlpha = 0.65;
 
 		// circle
-		c.main.fillStyle = this.color;
-		c.main.beginPath();
-		c.main.arc(0, 0, RADIUS, 0, 2 * Math.PI);
-		c.main.strokeStyle = BACKGROUND_COLOR;
-		c.main.lineWidth = 6;
-		c.main.stroke();
-		c.main.fill();
+		ctx.fillStyle = this.color;
+		ctx.beginPath();
+		ctx.arc(0, 0, RADIUS, 0, 2 * Math.PI);
+		ctx.strokeStyle = BACKGROUND_COLOR;
+		ctx.lineWidth = 6;
+		ctx.stroke();
+		ctx.fill();
 
 		// draw symbol for powerup
-		c.main.strokeStyle = "#fff";
-		c.main.lineWidth = 4;
+		ctx.strokeStyle = "#fff";
+		ctx.lineWidth = 4;
 		this.drawSymbol();
 
-		c.main.translate(-this.x, -this.y);
-		c.main.globalAlpha = 1;
+		ctx.translate(-this.x, -this.y);
+		ctx.globalAlpha = 1;
 	}
 
 	drawSymbol() {
-		c.main.strokeRect(-8, -8, 16, 16);
+		ctx.strokeRect(-8, -8, 16, 16);
 	}
 
 	applyEffect(char) {
@@ -250,18 +255,18 @@ class MoreSword extends PowerUp {
 	// draw arrow icon <->
 	drawSymbol() {
 		// line -
-		c.main.beginPath();
-		c.main.moveTo(-12, 0);
-		c.main.lineTo(12, 0);
+		ctx.beginPath();
+		ctx.moveTo(-12, 0);
+		ctx.lineTo(12, 0);
 		// first chevron <
-		c.main.moveTo(-7, -6);
-		c.main.lineTo(-12, 0);
-		c.main.lineTo(-7, 6);
+		ctx.moveTo(-7, -6);
+		ctx.lineTo(-12, 0);
+		ctx.lineTo(-7, 6);
 		// second chevron >
-		c.main.moveTo(7, -6);
-		c.main.lineTo(12, 0);
-		c.main.lineTo(7, 6);
-		c.main.stroke();
+		ctx.moveTo(7, -6);
+		ctx.lineTo(12, 0);
+		ctx.lineTo(7, 6);
+		ctx.stroke();
 	}
 }
 
@@ -278,17 +283,17 @@ class MoreThrust extends PowerUp {
 	// draw different double chevron icon >>
 	drawSymbol() {
 		// first chevron >
-		c.main.beginPath();
-		c.main.moveTo(-9, -9);
-		c.main.lineTo(0, 0);
-		c.main.lineTo(-9, 9);
-		c.main.stroke();
+		ctx.beginPath();
+		ctx.moveTo(-9, -9);
+		ctx.lineTo(0, 0);
+		ctx.lineTo(-9, 9);
+		ctx.stroke();
 		// second chevron >
-		c.main.beginPath();
-		c.main.moveTo(3, -9);
-		c.main.lineTo(12, 0);
-		c.main.lineTo(3, 9);
-		c.main.stroke();
+		ctx.beginPath();
+		ctx.moveTo(3, -9);
+		ctx.lineTo(12, 0);
+		ctx.lineTo(3, 9);
+		ctx.stroke();
 	}
 }
 
@@ -299,14 +304,14 @@ class Wrap extends PowerUp {
 	}
 	// draw swirly portal icon
 	drawSymbol() {
-		c.main.beginPath();
+		ctx.beginPath();
 		// draw three arcs (, rotating each time
 		for (let i = 0; i < 3; i++) {
-			c.main.moveTo(0, 4);
-			c.main.arc(0, -4, 8, 1.2, 1.5 * Math.PI);
-			c.main.rotate((Math.PI * 2) / 3);
+			ctx.moveTo(0, 4);
+			ctx.arc(0, -4, 8, 1.2, 1.5 * Math.PI);
+			ctx.rotate((Math.PI * 2) / 3);
 		}
-		c.main.stroke();
+		ctx.stroke();
 	}
 }
 
@@ -328,22 +333,26 @@ function randomPowerUp() {
 let powerUps = [];
 
 function step() {
-	// draw background
-	if (lastPointTTL) {
-		drawPointTransition();
-	} else {
-		c.main.fillStyle = BACKGROUND_COLOR + "bc";
-		c.main.fillRect(0, 0, frameWidth, frameHeight);
-		for (const pow of powerUps) {
-			pow.draw();
-		}
-		for (const char of chars) {
-			char.update();
-			char.draw();
-		}
-		for (const char of chars) {
-			char.detectHits();
-		}
+	// clear background
+	ctx.fillStyle = BACKGROUND_COLOR + "bc";
+	ctx.fillRect(0, 0, frameWidth, frameHeight);
+	// draw powerups and characters
+	for (const pow of powerUps) {
+		pow.draw();
+	}
+	for (const char of chars) {
+		char.update();
+		char.draw();
+	}
+	// check for collisions
+	for (const char of chars) {
+		char.detectHits();
+	}
+	// check if a point was scored
+	if (pointScored) {
+		pointTransition();
+		pointScored = false;
+		return;
 	}
 	// random chance of adding new powerup
 	if (Math.random() < POWER_UP_PROBABILITY) {
@@ -357,66 +366,71 @@ function resize() {
 	frameWidth = window.innerWidth * window.devicePixelRatio;
 	frameHeight = window.innerHeight * window.devicePixelRatio;
 	// resize canvases
-	for (const layerName in canvases) {
-		canvases[layerName].width = frameWidth;
-		canvases[layerName].height = frameHeight;
-	}
+	mainCanvas.width = frameWidth;
+	mainCanvas.height = frameHeight;
+	scoreCanvas.width = frameWidth;
+	scoreCanvas.height = frameHeight;
+
 	// make sure characters are in frame
 	for (const char of chars) {
 		char.x = Math.min(char.x, frameWidth - RADIUS);
 		char.y = Math.min(char.y, frameHeight - RADIUS);
 	}
 	// set context settings because for some reason they get cleared
-	c.main.lineCap = "round";
-	c.main.lineJoin = "round";
-	c.score.globalAlpha = 0.5;
-	// c.main.globalCompositeOperation = "difference";
+	ctx.lineCap = "round";
+	ctx.lineJoin = "round";
+	scoreCtx.globalAlpha = 0.5;
+	// ctx.globalCompositeOperation = "difference";
 	drawScoreBoard();
 }
 
 function resetScreen() {
-	c.main.fillStyle = BACKGROUND_COLOR;
-	c.main.fillRect(0, 0, frameWidth, frameHeight);
+	ctx.fillStyle = BACKGROUND_COLOR;
+	ctx.fillRect(0, 0, frameWidth, frameHeight);
 	for (const char of chars) {
 		char.reset();
-		char.draw();
 	}
 	powerUps = [];
-	drawScoreBoard();
 }
 
 function drawScoreBoard() {
-	c.score.clearRect(0, 0, frameWidth, frameHeight);
-	c.score.font = "140px " + FONT_FAMILY;
+	scoreCtx.clearRect(0, 0, frameWidth, frameHeight);
+	scoreCtx.font = "140px " + FONT_FAMILY;
 
 	// separator
-	c.score.textAlign = "center";
-	c.score.fillStyle = NEUTRAL_COLOR;
+	scoreCtx.textAlign = "center";
+	scoreCtx.fillStyle = NEUTRAL_COLOR;
 	// for Balsamiq Sans, the hyphen has to be a bit higher than the numbers to look centered
-	c.score.fillText("-", frameWidth / 2, 110);
+	scoreCtx.fillText("-", frameWidth / 2, 110);
 	// first character
-	c.score.textAlign = "right";
-	c.score.fillStyle = chars[0].color;
-	c.score.fillText(chars[0].score, frameWidth / 2 - 30, 120);
+	scoreCtx.textAlign = "right";
+	scoreCtx.fillStyle = chars[0].color;
+	scoreCtx.fillText(chars[0].score, frameWidth / 2 - 30, 120);
 	// second character
-	c.score.textAlign = "left";
-	c.score.fillStyle = chars[1].color;
-	c.score.fillText(chars[1].score, frameWidth / 2 + 30, 120);
+	scoreCtx.textAlign = "left";
+	scoreCtx.fillStyle = chars[1].color;
+	scoreCtx.fillText(chars[1].score, frameWidth / 2 + 30, 120);
 }
 
-function drawPointTransition() {
-	if (lastPointTTL == 40) {
-		drawScoreBoard();
+function pointTransition() {
+	// trigger win message
+	if (pointWinner === null) {
+		msg.style.color = NEUTRAL_COLOR;
+		msg.textContent = "tie!";
+	} else {
+		msg.style.color = pointWinner.color;
+		msg.textContent = `point for ${pointWinner.name}!`;
 	}
-	c.msg.clearRect(0, 0, frameWidth, frameHeight);
-	c.msg.globalAlpha = Math.min(1, lastPointTTL / 60);
-	c.msg.textAlign = "center";
-	c.msg.font = (81 - lastPointTTL) ** 4 / 40000 + "px " + FONT_FAMILY;
-	c.msg.fillStyle = lastPointWinner.color;
-	c.msg.fillText("yeah!", frameWidth / 2, frameHeight / 2);
-	lastPointTTL--;
-	if (lastPointTTL == 0) {
+	msg.classList.add("shown");
+
+	// update scoreboard after a delay
+	setTimeout(drawScoreBoard, 600);
+	// after a delay, reset the screen and resume animation
+	setTimeout(() => {
 		resetScreen();
-		c.msg.clearRect(0, 0, frameWidth, frameHeight);
-	}
+		window.requestAnimationFrame(step);
+	}, 1200);
+	setTimeout(() => {
+		msg.classList.remove("shown");
+	}, 2000);
 }
