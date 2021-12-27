@@ -3,6 +3,7 @@ A simple little local two-player browser game. To try it out, download all the f
 Colors taken from [gruvbox](https://github.com/morhetz/gruvbox).
 
 # TODO
+- test on more platforms
 - add greeting page and simple tutorial
 - detect framerate and adapt thrust and friction
 - improv score animation

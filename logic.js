@@ -196,11 +196,12 @@ class PowerUp {
 		this.color = undefined;
 	}
 
+	// draw powerup
 	draw() {
-		c.main.globalAlpha = 0.5;
-		// draw powerup
 		c.main.translate(this.x, this.y);
+		
 		// circle
+		c.main.globalAlpha = 0.4;
 		c.main.fillStyle = this.color;
 		c.main.beginPath();
 		c.main.arc(0, 0, RADIUS, 0, 2 * Math.PI);
@@ -208,10 +209,13 @@ class PowerUp {
 		c.main.lineWidth = 6;
 		c.main.stroke();
 		c.main.fill();
+
 		// draw symbol for powerup
+		c.main.globalAlpha = 0.6;
 		c.main.strokeStyle = "#fff";
 		c.main.lineWidth = 4;
 		this.drawSymbol();
+
 		c.main.translate(-this.x, -this.y);
 		c.main.globalAlpha = 1;
 	}
@@ -240,15 +244,11 @@ class MoreSword extends PowerUp {
 		c.main.beginPath();
 		c.main.moveTo(-12, 0);
 		c.main.lineTo(12, 0);
-		c.main.stroke();
 		// first chevron <
-		c.main.beginPath();
 		c.main.moveTo(-7, -6);
 		c.main.lineTo(-12, 0);
 		c.main.lineTo(-7, 6);
-		c.main.stroke();
 		// second chevron >
-		c.main.beginPath();
 		c.main.moveTo(7, -6);
 		c.main.lineTo(12, 0);
 		c.main.lineTo(7, 6);
@@ -272,18 +272,12 @@ class MoreThrust extends PowerUp {
 		c.main.beginPath();
 		c.main.moveTo(-9, -9);
 		c.main.lineTo(0, 0);
-		c.main.stroke();
-		c.main.beginPath();
-		c.main.moveTo(0,0);
 		c.main.lineTo(-9, 9);
 		c.main.stroke();
 		// second chevron >
 		c.main.beginPath();
 		c.main.moveTo(3, -9);
 		c.main.lineTo(12, 0);
-		c.main.stroke();
-		c.main.beginPath();
-		c.main.moveTo(12,0);
 		c.main.lineTo(3, 9);
 		c.main.stroke();
 	}
@@ -296,13 +290,14 @@ class Wrap extends PowerUp {
 	}
 	// draw swirly portal icon
 	drawSymbol() {
-		// first arc
+		c.main.beginPath();
+		// draw three arcs (, rotating each time
 		for (let i = 0; i < 3; i++) {
-			c.main.beginPath();
+			c.main.moveTo(0, 4);
 			c.main.arc(0, -4, 8, 1.2, 1.5 * Math.PI);
-			c.main.stroke();
 			c.main.rotate((Math.PI * 2) / 3);
 		}
+		c.main.stroke();
 	}
 }
 
