@@ -9,7 +9,7 @@ let canvases = {},
 // constants
 const BACKGROUND_COLOR = "#232323",
 	NEUTRAL_COLOR = "#666666",
-	FONT_FAMILY = "AmadorW01-Regular, serif",
+	FONT_FAMILY = "Balsamiq Sans",
 	// character size
 	RADIUS = 20,
 	SWORD_LENGTH = 160,
@@ -191,17 +191,18 @@ function keySet(keyCode, state) {
 
 class PowerUp {
 	constructor() {
-		this.x = Math.random() * frameWidth;
-		this.y = Math.random() * frameHeight;
+		// no powerups within 40px of edges of frame
+		this.x = 40 + Math.random() * (frameWidth - 80);
+		this.y = 40 + Math.random() * (frameHeight - 80);
 		this.color = undefined;
 	}
 
 	// draw powerup
 	draw() {
 		c.main.translate(this.x, this.y);
-		
+
 		// circle
-		c.main.globalAlpha = 0.4;
+		c.main.globalAlpha = 0.5;
 		c.main.fillStyle = this.color;
 		c.main.beginPath();
 		c.main.arc(0, 0, RADIUS, 0, 2 * Math.PI);
@@ -211,7 +212,7 @@ class PowerUp {
 		c.main.fill();
 
 		// draw symbol for powerup
-		c.main.globalAlpha = 0.6;
+		c.main.globalAlpha = 0.7;
 		c.main.strokeStyle = "#fff";
 		c.main.lineWidth = 4;
 		this.drawSymbol();
