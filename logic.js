@@ -28,8 +28,10 @@ window.onload = function () {
 	// find all canvas elements and create contexts
 	for (const layerName of ["main", "score", "msg"]) {
 		canvases[layerName] = document.getElementById(layerName + "-canvas");
-		c[layerName] = canvases[layerName].getContext("2d");
 	}
+	c["main"] = canvases["main"].getContext("2d", { alpha: false });
+	c["score"] = canvases["score"].getContext("2d");
+	c["msg"] = canvases["msg"].getContext("2d");
 	// reset frame size and character positions
 	resize();
 	resetScreen();
@@ -65,7 +67,10 @@ class Character {
 		this.wrap = false;
 		this.x = this.xPortion * frameWidth;
 		this.y = this.yPortion * frameHeight;
-		this.yv = this.xv = 0;
+		// set velocity to point toward center with ridiculously small magnitude
+		// just to make sword point toward center
+		this.xv = 1e-20 * (frameWidth / 2 - this.x);
+		this.yv = 1e-20 * (frameHeight / 2 - this.y);
 		this.swordX = this.x;
 		this.swordY = this.y;
 	}
@@ -200,9 +205,9 @@ class PowerUp {
 	// draw powerup
 	draw() {
 		c.main.translate(this.x, this.y);
+		c.main.globalAlpha = 0.65;
 
 		// circle
-		c.main.globalAlpha = 0.5;
 		c.main.fillStyle = this.color;
 		c.main.beginPath();
 		c.main.arc(0, 0, RADIUS, 0, 2 * Math.PI);
@@ -212,7 +217,6 @@ class PowerUp {
 		c.main.fill();
 
 		// draw symbol for powerup
-		c.main.globalAlpha = 0.7;
 		c.main.strokeStyle = "#fff";
 		c.main.lineWidth = 4;
 		this.drawSymbol();
