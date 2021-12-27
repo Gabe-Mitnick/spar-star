@@ -4,20 +4,17 @@
 		<meta charset="utf-8" />
 		<title>Spar Star</title>
 
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@400;700&display=swap"
-			rel="stylesheet"
-		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<!-- only need the characters 0123456789-yeah! -->
+		<link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans&display=swap&text=0123456789-yeah!" rel="stylesheet"> 
 
 		<style>
 			body {
 				overflow: hidden;
 				background: #232323;
 				margin: 0;
-				/* this is necessary to force the font to load, even tho the font is separately set in the js for the canvas */
-				font-family: "Balsamiq Sans";
+				font-family: Balsamiq Sans;
 			}
 			canvas {
 				position: absolute;
@@ -25,14 +22,16 @@
 				height: 100%;
 			}
 		</style>
-		<script src="logic.js"></script>
 		<link rel="stylesheet" href="https://use.typekit.net/kjp5sfv.css" />
 	</head>
-
+	
 	<body onkeydown="keySet(event.which, true)" onkeyup="keySet(event.which, false)">
 		<canvas id="main-canvas"></canvas>
 		<canvas id="score-canvas"></canvas>
 		<canvas id="msg-canvas"></canvas>
+		<!-- force chrome to load the font before running javascript -->
+		<span>!</span>
+		<script src="logic.js"></script>
 		<!-- GoatCounter analytics -->
 		<script data-goatcounter="https://gabe-mitnick.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 	</body>

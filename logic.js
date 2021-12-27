@@ -9,7 +9,7 @@ let canvases = {},
 // constants
 const BACKGROUND_COLOR = "#232323",
 	NEUTRAL_COLOR = "#666666",
-	FONT_FAMILY = "Balsamiq Sans",
+	FONT_FAMILY = "Balsamiq Sans, sans-serif",
 	// character size
 	RADIUS = 20,
 	SWORD_LENGTH = 160,
@@ -337,7 +337,7 @@ function step() {
 			c.msg.clearRect(0, 0, frameWidth, frameHeight);
 		}
 	} else {
-		c.main.fillStyle = BACKGROUND_COLOR + "bb";
+		c.main.fillStyle = BACKGROUND_COLOR + "bc";
 		c.main.fillRect(0, 0, frameWidth, frameHeight);
 		for (const pow of powerUps) {
 			pow.draw();
@@ -397,7 +397,8 @@ function drawScoreBoard() {
 	// separator
 	c.score.textAlign = "center";
 	c.score.fillStyle = NEUTRAL_COLOR;
-	c.score.fillText("-", frameWidth / 2, 120);
+	// for Balsamiq Sans, the hyphen has to be a bit higher than the numbers to look centered
+	c.score.fillText("-", frameWidth / 2, 110);
 	// first character
 	c.score.textAlign = "right";
 	c.score.fillStyle = chars[0].color;
