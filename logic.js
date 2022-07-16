@@ -10,7 +10,8 @@ let mainCanvas,
 	pointScored = false;
 
 // constants
-const BACKGROUND_COLOR = "#232323",
+// using var instead of const so I can change it during runtime in devtools
+var BACKGROUND_COLOR = "#232323",
 	NEUTRAL_COLOR = "#666666",
 	FONT_FAMILY = "Balsamiq Sans, sans-serif",
 	// character size
@@ -26,6 +27,13 @@ const BACKGROUND_COLOR = "#232323",
 	ROOT_2 = Math.sqrt(0.5),
 	// 0.002
 	POWER_UP_PROBABILITY = 0.002;
+
+// fps metering
+var FRAME_RATE_FACTOR = 1 / 140,
+	SAMPLING_PERIOD = 10,
+	startTime = 0,
+	frameCount = SAMPLING_PERIOD,
+	slowness = 1;
 
 window.onload = function () {
 	// find all canvas elements and create contexts
@@ -89,8 +97,8 @@ class Character {
 		let adjustment =
 			this.keyStates.right != this.keyStates.left && this.keyStates.up != this.keyStates.down ? ROOT_2 : 1;
 
-		this.xv += (this.keyStates.right - this.keyStates.left) * adjustment * this.thrust;
-		this.yv += (this.keyStates.down - this.keyStates.up) * adjustment * this.thrust;
+		this.xv += (this.keyStates.right - this.keyStates.left) * adjustment * this.thrust * slowness;
+		this.yv += (this.keyStates.down - this.keyStates.up) * adjustment * this.thrust * slowness;
 
 		if (this.wrap) {
 			// wrap around walls
@@ -332,7 +340,17 @@ function randomPowerUp() {
 
 let powerUps = [];
 
-function step() {
+function step(time) {
+	if (frameCount == SAMPLING_PERIOD) {
+		if (startTime != 0) {
+			slowness = (time - startTime) * FRAME_RATE_FACTOR;
+			console.log(`slowness: ${slowness}`);
+		}
+		frameCount = 0;
+		startTime = time;
+	}
+	frameCount++;
+
 	// clear background
 	ctx.fillStyle = BACKGROUND_COLOR + "bc";
 	ctx.fillRect(0, 0, frameWidth, frameHeight);
