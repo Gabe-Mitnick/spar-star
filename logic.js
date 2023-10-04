@@ -33,7 +33,8 @@ var FRAME_RATE_FACTOR = 1 / 140,
 	SAMPLING_PERIOD = 10,
 	startTime = 0,
 	frameCount = SAMPLING_PERIOD,
-	slowness = 1;
+	slowness = 1,
+	isTrackingFPS = true;
 
 window.onload = function () {
 	// find all canvas elements and create contexts
@@ -323,25 +324,15 @@ class Wrap extends PowerUp {
 	}
 }
 
+const powerUpTypes = [MoreSword, MoreThrust, Wrap];
 function randomPowerUp() {
-	let rand = Math.floor(Math.random() * 3);
-	switch (rand) {
-		case 0:
-			return new MoreSword();
-		case 1:
-			return new MoreThrust();
-		case 2:
-			return new Wrap();
-		default:
-			console.log("modify number of power ups in randomPowerUp()!");
-			return new MoreSword();
-	}
+	return new powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)]();
 }
 
 let powerUps = [];
 
 function step(time) {
-	if (frameCount == SAMPLING_PERIOD) {
+	if (isTrackingFPS && frameCount == SAMPLING_PERIOD) {
 		if (startTime != 0) {
 			slowness = (time - startTime) * FRAME_RATE_FACTOR;
 			console.log(`slowness: ${slowness}`);
@@ -431,6 +422,9 @@ function drawScoreBoard() {
 }
 
 function pointTransition() {
+	// stop tracking fps while animating score board, since it'll cause framedrops
+	isTrackingFPS = false;
+
 	// trigger win message
 	if (pointWinner === null) {
 		msg.style.color = NEUTRAL_COLOR;
@@ -447,8 +441,11 @@ function pointTransition() {
 	setTimeout(() => {
 		resetScreen();
 		window.requestAnimationFrame(step);
-	}, 1200);
+	}, 1800);
 	setTimeout(() => {
 		msg.classList.remove("shown");
+		// resume tracking FPS and restart frame counter
+		isTrackingFPS = true;
+		frame_counter = SAMPLING_PERIOD;
 	}, 2000);
 }
