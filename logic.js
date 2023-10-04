@@ -136,6 +136,10 @@ class Character {
 		this.swordY = this.y + (this.yv / velocityMagnitude) * this.swordLength;
 	}
 
+	isMoving() {
+		return this.xv != 0 || this.yv != 0;
+	}
+
 	draw() {
 		// draw character
 		ctx.fillStyle = this.color;
@@ -364,7 +368,9 @@ function step(time) {
 		return;
 	}
 	// random chance of adding new powerup
-	if (Math.random() < POWER_UP_PROBABILITY) {
+	// don't add powerups if no one is moving, though,
+	// so that power ups don't pile up while game is in the background
+	if (chars.some(char => char.isMoving()) && Math.random() < POWER_UP_PROBABILITY) {
 		powerUps.push(randomPowerUp());
 	}
 	window.requestAnimationFrame(step);
