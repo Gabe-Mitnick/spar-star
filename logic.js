@@ -186,7 +186,7 @@ class Character {
 			this.swordLength;
 
 		let slice = horizDist <= COLLISION_RADIUS && 0 <= vertDist && vertDist <= this.swordLength;
-		let stab = (this.swordX - other.x) ** 2 + (this.swordY - other.y) ** 2 <= COLLISION_RADIUS;
+		let stab = (this.swordX - other.x) ** 2 + (this.swordY - other.y) ** 2 <= COLLISION_RADIUS ** 2;
 		return slice || stab;
 	}
 
