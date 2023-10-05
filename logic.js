@@ -61,6 +61,7 @@ class Character {
 		this.name = name;
 		this.color = color;
 		this.score = 0;
+		this.controlsInverted = false;
 		// keypress management
 		this.keyCodes = {
 			up: upKeyCode,
@@ -88,6 +89,9 @@ class Character {
 		this.yv = 1e-20 * (frameHeight / 2 - this.y);
 		this.swordX = this.x;
 		this.swordY = this.y;
+		if (this.controlsInverted) {
+			this.invertKeyCodes();
+		}
 	}
 
 	update() {
@@ -198,6 +202,17 @@ class Character {
 			pointWinner = null;
 		}
 	}
+
+	invertKeyCodes() {
+		// release all keys
+		for (const key in this.keyStates) {
+			this.keyStates[key] = false;
+		}
+		// swap keys for up/down and left/right
+		[this.keyCodes.up, this.keyCodes.down] = [this.keyCodes.down, this.keyCodes.up];
+		[this.keyCodes.left, this.keyCodes.right] = [this.keyCodes.right, this.keyCodes.left];
+		this.controlsInverted = !this.controlsInverted;
+	}
 }
 
 // characters
@@ -256,6 +271,7 @@ class PowerUp {
 	}
 }
 
+// increases sword length, but taking too many makes your sword small
 class MoreSword extends PowerUp {
 	color = "#458588";
 	applyEffect(char) {
@@ -283,8 +299,9 @@ class MoreSword extends PowerUp {
 	}
 }
 
+// increases your speed, but taking too many makes you slow
 class MoreThrust extends PowerUp {
-	color = "#d65d0e";
+	color = "#98971a";
 	applyEffect(char) {
 		if (char.thrust >= THRUST * 2) {
 			char.thrust = THRUST * 0.6;
@@ -293,7 +310,7 @@ class MoreThrust extends PowerUp {
 		}
 	}
 
-	// draw different double chevron icon >>
+	// draw double chevron icon >>
 	drawSymbol() {
 		// first chevron >
 		ctx.beginPath();
@@ -310,6 +327,7 @@ class MoreThrust extends PowerUp {
 	}
 }
 
+// toggles teleporting across boundaries as if on a torus
 class Wrap extends PowerUp {
 	color = "#b16286";
 	applyEffect(char) {
@@ -328,7 +346,33 @@ class Wrap extends PowerUp {
 	}
 }
 
-const powerUpTypes = [MoreSword, MoreThrust, Wrap];
+// invert controls
+class InvertControls extends PowerUp {
+	color = "#d65d0e";
+	applyEffect(char) {
+		char.invertKeyCodes();
+		// copilot wrote this version lmao. not exactly what i had in mind, but it's fun:
+		// for (const key in char.keyStates) {
+		// 	char.keyStates[key] = !char.keyStates[key];
+		// }
+	}
+	drawSymbol() {
+		// draw up arrow
+		ctx.beginPath();
+		ctx.moveTo(-4, 12);
+		ctx.lineTo(-4, -12);
+		ctx.lineTo(-10, -6);
+		ctx.stroke();
+		// draw down arrow
+		ctx.beginPath();
+		ctx.moveTo(4, -12);
+		ctx.lineTo(4, 12);
+		ctx.lineTo(10, 6);
+		ctx.stroke();
+	}
+}
+
+const powerUpTypes = [MoreSword, MoreThrust, Wrap, InvertControls];
 function randomPowerUp() {
 	return new powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)]();
 }
@@ -339,7 +383,6 @@ function step(time) {
 	if (isTrackingFPS && frameCount == SAMPLING_PERIOD) {
 		if (startTime != 0) {
 			slowness = (time - startTime) * FRAME_RATE_FACTOR;
-			console.log(`slowness: ${slowness}`);
 		}
 		frameCount = 0;
 		startTime = time;
