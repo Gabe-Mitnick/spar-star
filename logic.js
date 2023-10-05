@@ -146,16 +146,27 @@ class Character {
 
 	draw() {
 		// draw character
+		ctx.translate(this.x, this.y);
+		let velocityMagnitude = Math.sqrt(this.xv * this.xv + this.yv * this.yv);
+		let cos = this.xv / velocityMagnitude;
+		let sin = this.yv / velocityMagnitude;
+		ctx.transform(cos, sin, -sin, cos, 0, 0)
+
 		ctx.fillStyle = this.color;
-		ctx.strokeStyle = this.color;
-		ctx.lineWidth = SWORD_WIDTH;
+		// sword
 		ctx.beginPath();
-		ctx.moveTo(this.x, this.y);
-		ctx.lineTo(this.swordX, this.swordY);
-		ctx.stroke();
-		ctx.beginPath();
-		ctx.arc(this.x, this.y, RADIUS, 0, 2 * Math.PI);
+		ctx.moveTo(0, -SWORD_WIDTH / 2);
+		// hit detection assumes a round tip, but we're drawing a triangular tip
+		ctx.lineTo(this.swordLength + SWORD_WIDTH / 2 - 10, -SWORD_WIDTH / 2);
+		ctx.lineTo(this.swordLength + SWORD_WIDTH / 2 + 5, 0)
+		ctx.lineTo(this.swordLength + SWORD_WIDTH / 2 - 10, SWORD_WIDTH / 2);
+		ctx.lineTo(0, SWORD_WIDTH / 2);
 		ctx.fill();
+		// body circle
+		ctx.beginPath();
+		ctx.arc(0, 0, RADIUS, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.resetTransform();
 	}
 
 	detectHits() {
@@ -243,6 +254,8 @@ class PowerUp {
 	draw() {
 		ctx.translate(this.x, this.y);
 		ctx.globalAlpha = 0.65;
+		ctx.lineCap = "round";
+		ctx.lineJoin = "round";
 
 		// circle
 		ctx.fillStyle = this.color;
@@ -435,8 +448,6 @@ function resize() {
 		char.y = Math.min(char.y, frameHeight - RADIUS);
 	}
 	// set context settings because for some reason they get cleared
-	ctx.lineCap = "round";
-	ctx.lineJoin = "round";
 	scoreCtx.globalAlpha = 0.5;
 	// ctx.globalCompositeOperation = "difference";
 	drawScoreBoard();
