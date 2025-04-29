@@ -7,7 +7,9 @@ let mainCanvas,
 	frameWidth,
 	frameHeight,
 	pointWinner = null,
-	pointScored = false;
+	pointScored = false,
+	gameStarted = false,
+	gamePaused = false;
 
 // constants
 // using var instead of const so I can change it during runtime in devtools
@@ -17,7 +19,7 @@ var BACKGROUND_COLOR = "#232323",
 	// character size
 	RADIUS = 20,
 	SWORD_LENGTH = 160,
-	SWORD_WIDTH = 10,
+	SWORD_WIDTH = 12,
 	COLLISION_RADIUS = RADIUS + SWORD_WIDTH / 2,
 	// physics
 	THRUST = 1,
@@ -25,8 +27,7 @@ var BACKGROUND_COLOR = "#232323",
 	BOUNCE_COEF = 0.9,
 	// to normalize diagonal acceleration
 	ROOT_2 = Math.sqrt(0.5),
-	// 0.002
-	POWER_UP_PROBABILITY = 0.002;
+	POWER_UP_PROBABILITY = 0.001;
 
 // fps metering
 var FRAME_RATE_FACTOR = 1 / 140,
@@ -45,13 +46,67 @@ window.onload = function () {
 	scoreCtx = scoreCanvas.getContext("2d");
 
 	msg = document.getElementById("message");
+
+	// set up instructions overlay
+	const startButton = document.getElementById("start-button");
+	const resumeButton = document.getElementById("resume-button");
+	const helpButton = document.getElementById("help-button");
+	const instructionsOverlay = document.getElementById("instructions-overlay");
+
+	function startGame() {
+		instructionsOverlay.style.display = "none";
+		gameStarted = true;
+		gamePaused = false;
+		// begin animation after instructions are closed
+		window.requestAnimationFrame(step);
+	}
+
+	function showInstructions() {
+		if (gameStarted) {
+			// If game has started, we're pausing to show instructions
+			gamePaused = true;
+			startButton.style.display = "none";
+			resumeButton.style.display = "inline-block";
+		} else {
+			// Initial instructions
+			startButton.style.display = "inline-block";
+			resumeButton.style.display = "none";
+		}
+		instructionsOverlay.style.display = "flex";
+	}
+
+	function resumeGame() {
+		instructionsOverlay.style.display = "none";
+		gamePaused = false;
+		window.requestAnimationFrame(step);
+	}
+
+	// Start game when button is clicked
+	startButton.addEventListener("click", startGame);
+
+	// Resume game when resume button is clicked
+	resumeButton.addEventListener("click", resumeGame);
+
+	// Show help when help button is clicked
+	helpButton.addEventListener("click", showInstructions);
+
+	// Also start game if user presses enter or space
+	window.addEventListener("keydown", function(event) {
+		if (event.key === "Enter" || event.key === " ") {
+			startGame();
+		}
+	});
+
 	// reset frame size and character positions
 	resize();
 	resetScreen();
 	drawScoreBoard();
 	window.addEventListener("resize", resize, false);
-	// begin animation
-	window.requestAnimationFrame(step);
+
+	// Draw initial scene but don't start animation loop until game is started
+	for (const char of chars) {
+		char.draw();
+	}
 };
 
 class Character {
@@ -233,6 +288,9 @@ let chars = [
 ];
 
 function keySet(keyCode, state) {
+	// Ignore keypresses if game hasn't started or is paused
+	if (!gameStarted || gamePaused) return;
+
 	for (const char of chars) {
 		for (const key in char.keyCodes) {
 			if (keyCode === char.keyCodes[key]) {
@@ -393,6 +451,9 @@ function randomPowerUp() {
 let powerUps = [];
 
 function step(time) {
+	// Don't animate if the game is paused
+	if (gamePaused) return;
+
 	if (isTrackingFPS && frameCount == SAMPLING_PERIOD) {
 		if (startTime != 0) {
 			slowness = (time - startTime) * FRAME_RATE_FACTOR;
@@ -423,10 +484,14 @@ function step(time) {
 		pointScored = false;
 		return;
 	}
+	let totalPointsScored = chars.reduce((acc, char) => acc + char.score, 0);
 	// random chance of adding new powerup
-	// don't add powerups if no one is moving, though,
-	// so that power ups don't pile up while game is in the background
-	if (chars.some(char => char.isMoving()) && Math.random() < POWER_UP_PROBABILITY) {
+	if (
+		// wait until first 3 points are scores
+		totalPointsScored > 2
+		// don't add powerups if no one is moving, so that power ups don't pile up while game is in the background
+		&& chars.some(char => char.isMoving())
+		&& Math.random() < POWER_UP_PROBABILITY) {
 		powerUps.push(randomPowerUp());
 	}
 	window.requestAnimationFrame(step);
