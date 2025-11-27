@@ -1,9 +1,9 @@
 // initialize canvas vars
 let mainCanvas,
-	scoreCanvas,
 	ctx,
-	scoreCtx,
 	msg,
+	scoreLeft,
+	scoreRight,
 	frameWidth,
 	frameHeight,
 	pointWinner = null,
@@ -42,14 +42,13 @@ var FRAME_RATE_FACTOR = 1 / 140,
 	dpr = 1;
 
 window.onload = function () {
-	// find all canvas elements and create contexts
+	// find canvas element and create context
 	mainCanvas = document.getElementById("main-canvas");
 	ctx = mainCanvas.getContext("2d", { alpha: false });
 
-	scoreCanvas = document.getElementById("score-canvas");
-	scoreCtx = scoreCanvas.getContext("2d");
-
 	msg = document.getElementById("message");
+	scoreLeft = document.getElementById("score-left");
+	scoreRight = document.getElementById("score-right");
 
 	// set up instructions overlay
 	const startButton = document.getElementById("start-button");
@@ -531,23 +530,17 @@ function resize() {
 	frameHeight = window.innerHeight;
 	// Get device pixel ratio for sharp rendering on high-DPI displays
 	dpr = window.devicePixelRatio || 1;
-	// Resize canvas buffers (scaled for sharpness)
+	// Resize canvas buffer (scaled for sharpness)
 	mainCanvas.width = frameWidth * dpr;
 	mainCanvas.height = frameHeight * dpr;
-	scoreCanvas.width = frameWidth * dpr;
-	scoreCanvas.height = frameHeight * dpr;
-	// Scale contexts so we draw in CSS pixel coordinates
+	// Scale context so we draw in CSS pixel coordinates
 	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-	scoreCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 	// make sure characters are in frame
 	for (const char of chars) {
 		char.x = Math.min(char.x, frameWidth - RADIUS);
 		char.y = Math.min(char.y, frameHeight - RADIUS);
 	}
-	// set context settings because for some reason they get cleared
-	scoreCtx.globalAlpha = 0.5;
-	// ctx.globalCompositeOperation = "difference";
 	drawScoreBoard();
 }
 
@@ -561,22 +554,8 @@ function resetScreen() {
 }
 
 function drawScoreBoard() {
-	scoreCtx.clearRect(0, 0, frameWidth, frameHeight);
-	scoreCtx.font = "70px " + FONT_FAMILY;
-
-	// separator
-	scoreCtx.textAlign = "center";
-	scoreCtx.fillStyle = NEUTRAL_COLOR;
-	// for Balsamiq Sans, the hyphen has to be a bit higher than the numbers to look centered
-	scoreCtx.fillText("-", frameWidth / 2, 55);
-	// first character
-	scoreCtx.textAlign = "right";
-	scoreCtx.fillStyle = chars[0].color;
-	scoreCtx.fillText(chars[0].score, frameWidth / 2 - 15, 60);
-	// second character
-	scoreCtx.textAlign = "left";
-	scoreCtx.fillStyle = chars[1].color;
-	scoreCtx.fillText(chars[1].score, frameWidth / 2 + 15, 60);
+	scoreLeft.textContent = chars[0].score;
+	scoreRight.textContent = chars[1].score;
 }
 
 function pointTransition() {

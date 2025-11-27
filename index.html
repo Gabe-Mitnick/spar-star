@@ -14,8 +14,11 @@
 
 	<body onkeydown="keySet(event.which, true)" onkeyup="keySet(event.which, false)">
 		<canvas id="main-canvas"></canvas>
-		<canvas id="score-canvas"></canvas>
-		<canvas id="msg-canvas"></canvas>
+		<div id="score-display">
+			<span id="score-left" class="score score-left">0</span>
+			<span id="score-separator">-</span>
+			<span id="score-right" class="score score-right">0</span>
+		</div>
 		<!-- force chrome to load the font before running javascript -->
 		<div id="message">yeah!</div>
 
