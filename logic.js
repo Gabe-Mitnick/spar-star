@@ -30,7 +30,7 @@ var BACKGROUND_COLOR = "#232323",
 	BOUNCE_COEF = 0.9,
 	// to normalize diagonal acceleration
 	ROOT_2 = Math.sqrt(0.5),
-	POWER_UP_PROBABILITY = 0.001;
+	POWER_UP_RATE = 0.002;
 
 // fps metering
 var FRAME_RATE_FACTOR = 1 / 140,
@@ -513,12 +513,17 @@ function step(time) {
 	}
 	let totalPointsScored = chars.reduce((acc, char) => acc + char.score, 0);
 	// random chance of adding new powerup
+	let powerUpProbability = POWER_UP_RATE
+		// keep rate of appearance independent of FPS
+		* slowness
+		// decrease probability if there are more powerups on screen
+		/ (powerUps.length + 1);
 	if (
-		// wait until first 3 points are scores
-		totalPointsScored > 2
+		// wait until first 3 points are scored
+		totalPointsScored >= 3
 		// don't add powerups if no one is moving, so that power ups don't pile up while game is in the background
 		&& chars.some(char => char.isMoving())
-		&& Math.random() < POWER_UP_PROBABILITY) {
+		&& Math.random() < powerUpProbability) {
 		powerUps.push(randomPowerUp());
 	}
 	window.requestAnimationFrame(step);
@@ -593,6 +598,7 @@ function pointTransition() {
 		// resume tracking FPS and restart frame counter
 		isTrackingFPS = true;
 		frameCount = SAMPLING_PERIOD;
+		startTime = 0;
 	}, 2000);
 }
 
