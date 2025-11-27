@@ -9,13 +9,16 @@ let mainCanvas,
 	pointWinner = null,
 	pointScored = false,
 	gameStarted = false,
-	gamePaused = false;
+	gamePaused = false,
+	gameOver = false;
 
 // constants
 // using var instead of const so I can change it during runtime in devtools
 var BACKGROUND_COLOR = "#232323",
 	NEUTRAL_COLOR = "#666666",
 	FONT_FAMILY = "Balsamiq Sans, sans-serif",
+	// game settings
+	WINNING_SCORE = 10,
 	// character size (in CSS pixels)
 	RADIUS = 10,
 	SWORD_LENGTH = 80,
@@ -53,18 +56,22 @@ window.onload = function () {
 	const resumeButton = document.getElementById("resume-button");
 	const helpButton = document.getElementById("help-button");
 	const instructionsOverlay = document.getElementById("instructions-overlay");
+	const gameOverOverlay = document.getElementById("game-over-overlay");
+	const winnerText = document.getElementById("winner-text");
+	const playAgainButton = document.getElementById("play-again-button");
 
 	function startGame() {
 		instructionsOverlay.style.display = "none";
 		gameStarted = true;
 		gamePaused = false;
+		gameOver = false;
 		// begin animation after instructions are closed
 		window.requestAnimationFrame(step);
 	}
 
 	function showInstructions() {
-		if (gameStarted) {
-			// If game has started, we're pausing to show instructions
+		if (gameStarted && !gameOver) {
+			// If game has started and not over, we're pausing to show instructions
 			gamePaused = true;
 			startButton.style.display = "none";
 			resumeButton.style.display = "inline-block";
@@ -82,6 +89,18 @@ window.onload = function () {
 		window.requestAnimationFrame(step);
 	}
 
+	function playAgain() {
+		gameOverOverlay.style.display = "none";
+		gameOver = false;
+		// Reset scores
+		for (const char of chars) {
+			char.score = 0;
+		}
+		resetScreen();
+		drawScoreBoard();
+		window.requestAnimationFrame(step);
+	}
+
 	// Start game when button is clicked
 	startButton.addEventListener("click", startGame);
 
@@ -91,10 +110,17 @@ window.onload = function () {
 	// Show help when help button is clicked
 	helpButton.addEventListener("click", showInstructions);
 
+	// Play again when button is clicked
+	playAgainButton.addEventListener("click", playAgain);
+
 	// Also start game if user presses enter or space
 	window.addEventListener("keydown", function(event) {
 		if (event.key === "Enter" || event.key === " ") {
-			startGame();
+			if (gameOver) {
+				playAgain();
+			} else if (!gameStarted || gamePaused) {
+				startGame();
+			}
 		}
 	});
 
@@ -117,6 +143,7 @@ class Character {
 		this.name = name;
 		this.color = color;
 		this.score = 0;
+		this.gamesWon = 0;
 		this.controlsInverted = false;
 		// keypress management
 		this.keyCodes = {
@@ -556,7 +583,15 @@ function pointTransition() {
 	// stop tracking fps while animating score board, since it'll cause framedrops
 	isTrackingFPS = false;
 
-	// trigger win message
+	// check if anyone has won the game - go straight to win screen
+	const winner = chars.find(char => char.score >= WINNING_SCORE);
+	if (winner) {
+		drawScoreBoard();
+		showGameOver(winner);
+		return;
+	}
+
+	// trigger point message
 	if (pointWinner === null) {
 		msg.style.color = NEUTRAL_COLOR;
 		msg.textContent = "tie!";
@@ -568,6 +603,7 @@ function pointTransition() {
 
 	// update scoreboard after a delay
 	setTimeout(drawScoreBoard, 600);
+
 	// after a delay, reset the screen and resume animation
 	setTimeout(() => {
 		resetScreen();
@@ -577,6 +613,31 @@ function pointTransition() {
 		msg.classList.remove("shown");
 		// resume tracking FPS and restart frame counter
 		isTrackingFPS = true;
-		frame_counter = SAMPLING_PERIOD;
+		frameCount = SAMPLING_PERIOD;
 	}, 2000);
+}
+
+function showGameOver(winner) {
+	gameOver = true;
+	winner.gamesWon++;
+
+	// Show exciting win animation (slower than point scored)
+	msg.style.color = winner.color;
+	msg.textContent = `${winner.name} wins!`;
+	msg.classList.add("win-shown");
+
+	// After animation, show the game over overlay
+	setTimeout(() => {
+		msg.classList.remove("win-shown");
+
+		const gameOverOverlay = document.getElementById("game-over-overlay");
+		const winnerText = document.getElementById("winner-text");
+		const gamesWonDisplay = document.getElementById("games-won");
+
+		winnerText.textContent = `${winner.name} wins!`;
+		winnerText.style.color = winner.color;
+		gamesWonDisplay.innerHTML = `<span style="color:${chars[0].color}">${chars[0].gamesWon}</span> <span style="color:${NEUTRAL_COLOR}">-</span> <span style="color:${chars[1].color}">${chars[1].gamesWon}</span>`;
+
+		gameOverOverlay.style.display = "flex";
+	}, 3500);
 }

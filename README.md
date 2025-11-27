@@ -5,14 +5,6 @@ Colors taken from [gruvbox](https://github.com/morhetz/gruvbox).
 
 ## TODO
 
-- end game at 10 points
-- test on more platforms
-- fix portal powerup's behavior when player is crossing an edge
-- add more powerups/status effects
-	- inc/dec body size
-	- change sword shape
-	- invert opponents controls
-	- add homing missile teammate
-	- lunar lander mode (with or without gravity)
-	- gravity mode
-- add single-player mode
+- fix sideways arrow characters on instruction screen
+- fix extra acceleration due to fps drop during score animation
+- move scoreboard to DOM instead of canvas

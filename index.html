@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>Spar Star</title>
+		<title>spar star</title>
 		<link rel="icon" href="icon.svg"/>
 
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -21,13 +21,12 @@
 
 		<div id="instructions-overlay">
 			<div id="instructions-content">
-				<h1>Spar Star</h1>
-				<p>Hit your opponent with your spike!</p>
+				<h1>spar star</h1>
+				<p>hit your opponent with your spike!</p>
 
 				<div class="player-controls">
 					<div class="player-info player-yellow">
-						<!-- <h3>Yellow</h3> -->
-						Yellow
+						yellow
 						<div class="keyboard-layout">
 							<div class="key-row">
 								<span class="key">W</span>
@@ -38,8 +37,7 @@
 						</div>
 					</div>
 					<div class="player-info player-red">
-						<!-- <h3>Red</h3> -->
-						Red
+						red
 						<div class="keyboard-layout">
 							<div class="key-row">
 								<span class="key">↑</span>
@@ -51,12 +49,20 @@
 					</div>
 				</div>
 
-				<button id="start-button" class="button">Start Game</button>
-				<button id="resume-button" class="button">Resume Game</button>
+				<button id="start-button" class="button">start</button>
+				<button id="resume-button" class="button">resume</button>
 			</div>
 		</div>
 
 		<button id="help-button">?</button>
+
+		<div id="game-over-overlay">
+			<div id="game-over-content">
+				<h1 id="winner-text"></h1>
+				<p id="games-won"></p>
+				<button id="play-again-button" class="button">play again</button>
+			</div>
+		</div>
 
 		<script src="logic.js"></script>
 		<!-- GoatCounter analytics -->
