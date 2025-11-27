@@ -16,13 +16,13 @@ let mainCanvas,
 var BACKGROUND_COLOR = "#232323",
 	NEUTRAL_COLOR = "#666666",
 	FONT_FAMILY = "Balsamiq Sans, sans-serif",
-	// character size
-	RADIUS = 20,
-	SWORD_LENGTH = 160,
-	SWORD_WIDTH = 12,
+	// character size (in CSS pixels)
+	RADIUS = 10,
+	SWORD_LENGTH = 80,
+	SWORD_WIDTH = 6,
 	COLLISION_RADIUS = RADIUS + SWORD_WIDTH / 2,
 	// physics
-	THRUST = 1,
+	THRUST = 0.5,
 	FRICTION = 0.98,
 	BOUNCE_COEF = 0.9,
 	// to normalize diagonal acceleration
@@ -35,7 +35,8 @@ var FRAME_RATE_FACTOR = 1 / 140,
 	startTime = 0,
 	frameCount = SAMPLING_PERIOD,
 	slowness = 1,
-	isTrackingFPS = true;
+	isTrackingFPS = true,
+	dpr = 1;
 
 window.onload = function () {
 	// find all canvas elements and create contexts
@@ -212,16 +213,16 @@ class Character {
 		ctx.beginPath();
 		ctx.moveTo(0, -SWORD_WIDTH / 2);
 		// hit detection assumes a round tip, but we're drawing a triangular tip
-		ctx.lineTo(this.swordLength + SWORD_WIDTH / 2 - 10, -SWORD_WIDTH / 2);
-		ctx.lineTo(this.swordLength + SWORD_WIDTH / 2 + 5, 0)
-		ctx.lineTo(this.swordLength + SWORD_WIDTH / 2 - 10, SWORD_WIDTH / 2);
+		ctx.lineTo(this.swordLength + SWORD_WIDTH / 2 - 5, -SWORD_WIDTH / 2);
+		ctx.lineTo(this.swordLength + SWORD_WIDTH / 2 + 2.5, 0)
+		ctx.lineTo(this.swordLength + SWORD_WIDTH / 2 - 5, SWORD_WIDTH / 2);
 		ctx.lineTo(0, SWORD_WIDTH / 2);
 		ctx.fill();
 		// body circle
 		ctx.beginPath();
 		ctx.arc(0, 0, RADIUS, 0, Math.PI * 2);
 		ctx.fill();
-		ctx.resetTransform();
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 	}
 
 	detectHits() {
@@ -302,9 +303,9 @@ function keySet(keyCode, state) {
 
 class PowerUp {
 	constructor() {
-		// no powerups within 40px of edges of frame
-		this.x = 40 + Math.random() * (frameWidth - 80);
-		this.y = 40 + Math.random() * (frameHeight - 80);
+		// no powerups within 20px of edges of frame
+		this.x = 20 + Math.random() * (frameWidth - 40);
+		this.y = 20 + Math.random() * (frameHeight - 40);
 		this.color = undefined;
 	}
 
@@ -320,13 +321,13 @@ class PowerUp {
 		ctx.beginPath();
 		ctx.arc(0, 0, RADIUS, 0, 2 * Math.PI);
 		ctx.strokeStyle = BACKGROUND_COLOR;
-		ctx.lineWidth = 6;
+		ctx.lineWidth = 3;
 		ctx.stroke();
 		ctx.fill();
 
 		// draw symbol for powerup
 		ctx.strokeStyle = "#fff";
-		ctx.lineWidth = 4;
+		ctx.lineWidth = 2;
 		this.drawSymbol();
 
 		ctx.translate(-this.x, -this.y);
@@ -334,7 +335,7 @@ class PowerUp {
 	}
 
 	drawSymbol() {
-		ctx.strokeRect(-8, -8, 16, 16);
+		ctx.strokeRect(-4, -4, 8, 8);
 	}
 
 	applyEffect(char) {
@@ -356,16 +357,16 @@ class MoreSword extends PowerUp {
 	drawSymbol() {
 		// line -
 		ctx.beginPath();
-		ctx.moveTo(-12, 0);
-		ctx.lineTo(12, 0);
+		ctx.moveTo(-6, 0);
+		ctx.lineTo(6, 0);
 		// first chevron <
-		ctx.moveTo(-7, -6);
-		ctx.lineTo(-12, 0);
-		ctx.lineTo(-7, 6);
+		ctx.moveTo(-3.5, -3);
+		ctx.lineTo(-6, 0);
+		ctx.lineTo(-3.5, 3);
 		// second chevron >
-		ctx.moveTo(7, -6);
-		ctx.lineTo(12, 0);
-		ctx.lineTo(7, 6);
+		ctx.moveTo(3.5, -3);
+		ctx.lineTo(6, 0);
+		ctx.lineTo(3.5, 3);
 		ctx.stroke();
 	}
 }
@@ -385,15 +386,15 @@ class MoreThrust extends PowerUp {
 	drawSymbol() {
 		// first chevron >
 		ctx.beginPath();
-		ctx.moveTo(-9, -9);
+		ctx.moveTo(-4.5, -4.5);
 		ctx.lineTo(0, 0);
-		ctx.lineTo(-9, 9);
+		ctx.lineTo(-4.5, 4.5);
 		ctx.stroke();
 		// second chevron >
 		ctx.beginPath();
-		ctx.moveTo(3, -9);
-		ctx.lineTo(12, 0);
-		ctx.lineTo(3, 9);
+		ctx.moveTo(1.5, -4.5);
+		ctx.lineTo(6, 0);
+		ctx.lineTo(1.5, 4.5);
 		ctx.stroke();
 	}
 }
@@ -409,8 +410,8 @@ class Wrap extends PowerUp {
 		ctx.beginPath();
 		// draw three arcs (, rotating each time
 		for (let i = 0; i < 3; i++) {
-			ctx.moveTo(0, 4);
-			ctx.arc(0, -4, 8, 1.2, 1.5 * Math.PI);
+			ctx.moveTo(0, 2);
+			ctx.arc(0, -2, 4, 1.2, 1.5 * Math.PI);
 			ctx.rotate((Math.PI * 2) / 3);
 		}
 		ctx.stroke();
@@ -430,15 +431,15 @@ class InvertControls extends PowerUp {
 	drawSymbol() {
 		// draw up arrow
 		ctx.beginPath();
-		ctx.moveTo(-4, 12);
-		ctx.lineTo(-4, -12);
-		ctx.lineTo(-10, -6);
+		ctx.moveTo(-2, 6);
+		ctx.lineTo(-2, -6);
+		ctx.lineTo(-5, -3);
 		ctx.stroke();
 		// draw down arrow
 		ctx.beginPath();
-		ctx.moveTo(4, -12);
-		ctx.lineTo(4, 12);
-		ctx.lineTo(10, 6);
+		ctx.moveTo(2, -6);
+		ctx.lineTo(2, 6);
+		ctx.lineTo(5, 3);
 		ctx.stroke();
 	}
 }
@@ -498,14 +499,19 @@ function step(time) {
 }
 
 function resize() {
-	// get window size
-	frameWidth = window.innerWidth * window.devicePixelRatio;
-	frameHeight = window.innerHeight * window.devicePixelRatio;
-	// resize canvases
-	mainCanvas.width = frameWidth;
-	mainCanvas.height = frameHeight;
-	scoreCanvas.width = frameWidth;
-	scoreCanvas.height = frameHeight;
+	// Frame dimensions in CSS pixels
+	frameWidth = window.innerWidth;
+	frameHeight = window.innerHeight;
+	// Get device pixel ratio for sharp rendering on high-DPI displays
+	dpr = window.devicePixelRatio || 1;
+	// Resize canvas buffers (scaled for sharpness)
+	mainCanvas.width = frameWidth * dpr;
+	mainCanvas.height = frameHeight * dpr;
+	scoreCanvas.width = frameWidth * dpr;
+	scoreCanvas.height = frameHeight * dpr;
+	// Scale contexts so we draw in CSS pixel coordinates
+	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+	scoreCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 	// make sure characters are in frame
 	for (const char of chars) {
@@ -529,21 +535,21 @@ function resetScreen() {
 
 function drawScoreBoard() {
 	scoreCtx.clearRect(0, 0, frameWidth, frameHeight);
-	scoreCtx.font = "140px " + FONT_FAMILY;
+	scoreCtx.font = "70px " + FONT_FAMILY;
 
 	// separator
 	scoreCtx.textAlign = "center";
 	scoreCtx.fillStyle = NEUTRAL_COLOR;
 	// for Balsamiq Sans, the hyphen has to be a bit higher than the numbers to look centered
-	scoreCtx.fillText("-", frameWidth / 2, 110);
+	scoreCtx.fillText("-", frameWidth / 2, 55);
 	// first character
 	scoreCtx.textAlign = "right";
 	scoreCtx.fillStyle = chars[0].color;
-	scoreCtx.fillText(chars[0].score, frameWidth / 2 - 30, 120);
+	scoreCtx.fillText(chars[0].score, frameWidth / 2 - 15, 60);
 	// second character
 	scoreCtx.textAlign = "left";
 	scoreCtx.fillStyle = chars[1].color;
-	scoreCtx.fillText(chars[1].score, frameWidth / 2 + 30, 120);
+	scoreCtx.fillText(chars[1].score, frameWidth / 2 + 15, 60);
 }
 
 function pointTransition() {
