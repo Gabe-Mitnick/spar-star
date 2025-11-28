@@ -617,11 +617,11 @@ function showGameOver(winner) {
 
 		const gameOverOverlay = document.getElementById("game-over-overlay");
 		const winnerText = document.getElementById("winner-text");
-		const gamesWonDisplay = document.getElementById("games-won");
 
 		winnerText.textContent = `${winner.name} wins!`;
 		winnerText.style.color = winner.color;
-		gamesWonDisplay.innerHTML = `<span style="color:${chars[0].color}">${chars[0].gamesWon}</span> <span style="color:${NEUTRAL_COLOR}">-</span> <span style="color:${chars[1].color}">${chars[1].gamesWon}</span>`;
+		document.getElementById("games-won-left").textContent = chars[0].gamesWon;
+		document.getElementById("games-won-right").textContent = chars[1].gamesWon;
 
 		gameOverOverlay.style.display = "flex";
 	}, 3500);
